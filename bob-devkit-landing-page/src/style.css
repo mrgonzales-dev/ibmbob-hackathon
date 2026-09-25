@@ -12,16 +12,30 @@
 
 body {
   margin: 0;
-  font-family: "Courier New", ui-monospace, monospace;
+  font-family: "Space Mono", "Courier New", ui-monospace, monospace;
   background: var(--bg);
   color: var(--ink);
-  /* grungy texture: scanlines + diagonal hatch, tinted blue/purple */
-  background-image:
-    repeating-linear-gradient(0deg, rgba(79, 127, 255, 0.05) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.04) 0 2px, transparent 2px 8px);
 }
 
-#app { min-height: 100vh; display: flex; align-items: center; }
+/* real grunge texture, dimmed over the base color */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background-image: url("/noise.png");
+  background-size: 512px;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
 
 .hero {
   max-width: 760px;
@@ -33,7 +47,21 @@ body {
     10px 10px 0 var(--blue),
     20px 20px 0 var(--purple);
   background: var(--panel);
+  position: relative;
 }
+
+/* subtle texture on the panel too */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/noise.png");
+  background-size: 512px;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.hero > * { position: relative; }
 
 .sys {
   color: var(--blue);
@@ -84,6 +112,12 @@ h1 {
   padding: 14px 16px;
   box-shadow: 6px 6px 0 var(--dim);
   background: var(--bg);
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.skill:hover {
+  transform: scale(1.02);
+  box-shadow: 8px 8px 0 var(--blue);
 }
 
 .skill[data-status="live"] {
@@ -123,4 +157,13 @@ h1 {
   color: #4a5068;
   text-transform: uppercase;
   letter-spacing: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill { transition: none; }
+  .skill:hover { transform: none; }
+}
+
+@media (max-width: 640px) {
+  .hero { margin: 24px 16px; padding: 24px 20px; }
 }
