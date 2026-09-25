@@ -90,6 +90,10 @@ h1 {
   box-shadow: 6px 6px 0 var(--blue);
 }
 
+.skill[data-status="wip"] {
+  box-shadow: 6px 6px 0 var(--purple);
+}
+
 .skill[data-status="soon"] {
   opacity: 0.45;
   border-style: dashed;

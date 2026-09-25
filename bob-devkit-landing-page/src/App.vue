@@ -12,7 +12,7 @@ const skills = [
   },
   {
     name: 'bob-upgrade',
-    status: 'soon',
+    status: 'wip',
     desc: 'Skill slot reserved.',
   },
 ]
