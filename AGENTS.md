@@ -17,24 +17,73 @@
 > productivity, reduces manual effort, errors, and rework, or significantly
 > shortens the time required to complete tasks.
 
+### Our toolkit
+
+> A terminal-native AI developer toolkit that understands your entire codebase
+> and helps you build, debug, review, and maintain it.
+
+We build in `.bob/` so every command ships as a skill that git tracks.
+
+A **skill** is one user-facing command. The user types it, or a model activates
+it from its description.
+
+| Command | Purpose |
+|---|---|
+| `bob-upgrade` | Ranked upgrade risk report. Runs every lane and merges them. |
+
+One command covers the whole workflow. The lanes are internal steps, not
+separate commands. The `deps`, `apis`, and `config` lanes run in parallel
+inside the one skill, then merge. Never copy the rule table into a second
+file. Link the shared reference.
+
+Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`. Run
+`bob-install` to copy the skill to the global path so it works in every
+project. A project copy wins over the global copy.
+
+Each skill is self-contained. A skill folder holds everything that skill needs,
+so one skill is one folder:
+
+```
+.bob/skills/bob-upgrade/
+  SKILL.md          # required: frontmatter + instructions
+  src/
+    run.py          # the command: local scan, optional --ai to Bob Shell
+    <scanner>.py    # the local rule engine
+    *.md            # the rule reference and the report template
+    requirements.txt
+    tests/
+```
+
+`bin/` holds only toolkit-level files that no single skill owns: the banner,
+the installer, and the PATH launchers. The launchers are the only files that
+point at skill code, and they hold no logic.
+
 ### Our workflow
 
 <!-- one-line: which workflow we are improving and the pain point -->
 
-- Workflow:
-- Pain today (time / effort / errors):
-- Solution in one sentence:
-- Impact we will demonstrate:
+- Workflow: Dependency upgrade analysis before a major framework version bump.
+- Pain today: Developers read changelogs and check packages by hand. The work takes hours.
+- Errors reach production. A missed package causes a broken deploy.
+- Solution: Bob scans the whole project in parallel. It prints a ranked risk report and a plan.
+- Impact: A Laravel 11 to 12 upgrade analyzed in seconds. The manual work takes two to four hours.
 
 ## Skill Structure
 
 Every skill lives in its own directory and must contain a `SKILL.md`.
 
 ```
-<skill-name>/
-  SKILL.md          # required: frontmatter + instructions
-  src/              # required: all scripts/assets the skill needs
+.bob/
+  skills/<skill-name>/
+    SKILL.md          # required: frontmatter + instructions
+    src/              # required: all scripts and data the skill needs
+  agents/<persona>.md # optional: one role for a subagent
+  commands/<name>.md  # optional: a slash command
 ```
+
+Bob Shell reads `.bob/skills/` at the project root. Git tracks `.bob/`, so a
+teammate receives every command on clone. Do not put a hackathon skill in
+`.opencode/`. That directory holds throwaway third-party skills and is ignored.
 
 `SKILL.md` format:
 
@@ -60,6 +109,9 @@ Step-by-step instructions for the agent...
 - If a request is ambiguous, ask before building.
 - Never commit secrets, API keys, or generated artifacts to the repo.
 - Flag violations of these rules instead of silently working around them.
+- Never state a compatibility fact from memory. Read it from the official
+  documentation or a committed data file, then name the source.
+- Never invent a finding to fill a report. Report nothing when nothing breaks.
 
 ## Git Commit Rules
 
@@ -171,5 +223,7 @@ explanations) must obey ASD-STE100 Simplified Technical English rules:
 - Skills must be model-agnostic markdown instructions — no hardcoded tool
   names unless the skill requires them.
 - Scripts must be runnable and documented inside `SKILL.md`.
+- Never name a script `bob`. Bob Shell owns that command name. A file called
+  `bob` breaks the shell itself. Use `bob-<command>` instead.
 - Test each skill against a real or sample project before calling it done —
   the hackathon requires a demonstrated workflow, not just code.
