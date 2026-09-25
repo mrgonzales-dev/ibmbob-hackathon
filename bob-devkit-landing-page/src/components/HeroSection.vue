@@ -101,7 +101,7 @@ h1 {
 }
 
 .term-wrap {
-  max-width: 720px;
+  max-width: 1200px;
   margin: 0 auto;
   text-align: left;
 }
