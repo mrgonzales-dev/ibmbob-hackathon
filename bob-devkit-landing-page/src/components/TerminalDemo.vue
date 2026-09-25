@@ -5,8 +5,8 @@ const sessions = [
     tag: 'live',
     state: 'idle — task done',
     lines: [
-      { cls: 'usr', text: '› add a projects section to the portfolio' },
-      { cls: 'thk', text: '⠿ planning...' },
+      { cls: 'usr', text: '› /bob-pr add a projects section to the portfolio' },
+      { cls: 'thk', text: '⠿ skill bob-pr loaded — planning...' },
       { cls: 'tol', text: '◆ bob_pr new --files main.go,index.html,style.css' },
       { cls: 'res', text: '  → PR #1 created' },
       { cls: 'tol', text: '◆ bob_pr snapshot 1' },
@@ -27,8 +27,8 @@ const sessions = [
     tag: 'wip — simulated',
     state: 'idle — task done',
     lines: [
-      { cls: 'usr', text: '› upgrade our dependencies' },
-      { cls: 'thk', text: '⠿ scanning...' },
+      { cls: 'usr', text: '› /bob-upgrade upgrade our dependencies' },
+      { cls: 'thk', text: '⠿ skill bob-upgrade loaded — scanning...' },
       { cls: 'tol', text: '◆ bob_upgrade scan' },
       { cls: 'res', text: '  → vue 3.4→3.5 safe' },
       { cls: 'res', text: '  → vite 5.x→8.x breaking' },
@@ -46,8 +46,8 @@ const sessions = [
     tag: 'soon — simulated',
     state: 'needs revision',
     lines: [
-      { cls: 'usr', text: '› write tests for src/auth.py' },
-      { cls: 'thk', text: '⠿ generating...' },
+      { cls: 'usr', text: '› /bob-test write tests for src/auth.py' },
+      { cls: 'thk', text: '⠿ skill bob-test loaded — generating...' },
       { cls: 'tol', text: '◆ bob_test gen src/auth.py' },
       { cls: 'res', text: '  → 4 tests → test_auth.py' },
       { cls: 'tol', text: '◆ bob_test run' },
