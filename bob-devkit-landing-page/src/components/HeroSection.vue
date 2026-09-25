@@ -6,12 +6,11 @@ import TerminalDemo from './TerminalDemo.vue'
   <section class="hero" id="top">
     <p class="sys reveal">sys://skills.collection</p>
     <h1 class="reveal">
-      The DevKit<br />That Grows
-      <span class="grad">With Your Agent</span>
+      Supercharge<br />
+      <span class="grad">Bob 2.0</span>
     </h1>
     <p class="sub reveal">
-      A collection of per-project agent skills. Plan review, upgrades, tests —
-      each a <code>bob-*</code> skill with real gates, not vibes.
+      A skill kit for the Bob 2.0 IDE. Real gates, not vibes.
     </p>
     <div class="cta-row reveal">
       <a class="btn primary" href="#skills">browse the skills</a>
