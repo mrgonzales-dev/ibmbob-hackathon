@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from run import (
     DataError,
+    LANES,
     SKILL_NAME,
     available_skills,
     build_prompt,
@@ -20,7 +21,7 @@ from run import (
     resolve_skill,
 )
 
-ROOT = Path(__file__).resolve().parents[5]
+ROOT = Path(__file__).resolve().parents[4]
 SRC = Path(__file__).resolve().parents[1]
 
 
@@ -312,7 +313,7 @@ class TestAiRun(RunnerCase):
 class TestWindowsShims(unittest.TestCase):
     def cmd_files(self):
         found = []
-        for base in (ROOT / "bin", ROOT / ".bob"):
+        for base in (ROOT / "bin",):
             if not base.is_dir():
                 continue
             found.extend(
@@ -364,13 +365,16 @@ class TestRealRepository(unittest.TestCase):
         for name in names:
             self.assertTrue(resolve_skill(ROOT, name).is_dir())
 
-    def test_the_suite_ships_one_command(self):
+    def test_the_toolkit_runs_bob_upgrade_and_nothing_else(self):
         names = available_skills(ROOT)
-        for expected in ("bob-apis", "bob-config", "bob-upgrade"):
-            if expected != "bob-upgrade":
-                self.assertNotIn(expected, names)
+        for gone in ("bob-apis", "bob-config", "bob-deps"):
+            self.assertNotIn(gone, names)
         self.assertIn("bob-upgrade", names)
-        self.assertEqual(names, ["bob-upgrade"])
+        self.assertEqual(sorted(LANES), ["bob-upgrade"])
+
+    def test_every_scanner_backed_skill_ships_a_runner(self):
+        for name in LANES:
+            self.assertTrue((ROOT / "skills" / name / "src" / "run.py").is_file(), name)
 
 
 if __name__ == "__main__":

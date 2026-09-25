@@ -6,7 +6,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from bob_install import SKILL_NAMES, install, same_tree, uninstall
+from bob_install import SKILL_NAMES, install, same_tree, skill_source, uninstall
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -141,7 +141,12 @@ class TestSameTree(unittest.TestCase):
 class TestToolkitSkillsExist(unittest.TestCase):
     def test_every_named_skill_ships_in_the_toolkit(self):
         for name in SKILL_NAMES:
-            self.assertTrue((ROOT / ".bob" / "skills" / name / "SKILL.md").is_file(), name)
+            source = skill_source(ROOT, name)
+            self.assertIsNotNone(source, name)
+            self.assertTrue((source / "SKILL.md").is_file(), name)
+
+    def test_the_skill_ships_at_the_project_root(self):
+        self.assertEqual(skill_source(ROOT, "bob-upgrade"), ROOT / "skills" / "bob-upgrade")
 
 
 if __name__ == "__main__":

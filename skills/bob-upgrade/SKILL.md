@@ -53,7 +53,7 @@ Run the preflight script. It counts files, packages, and tests. Its output is
 exact. Do not count anything yourself.
 
 ```shell
-python .bob/skills/bob-upgrade/src/preflight.py --root . --format json
+python bob-upgrade/src/preflight.py --root . --format json
 ```
 
 On Windows, use `py -3` in place of `python` when `python` is not on the PATH.

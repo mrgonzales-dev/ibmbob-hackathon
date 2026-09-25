@@ -10,7 +10,8 @@ MAX_TURNS = "40"
 INSTALL_URL = "https://bob.ibm.com/docs/shell/getting-started/install-and-setup"
 SRC_DIR = Path(__file__).resolve().parent
 SKILL_NAME = SRC_DIR.parent.name
-TOOLKIT_ROOT = SRC_DIR.parents[3]
+TOOLKIT_ROOT = SRC_DIR.parents[1]
+SKILL_PARENTS = ("", "skills", ".bob/skills")
 
 
 class DataError(ValueError):
@@ -23,17 +24,28 @@ def _force_utf8():
             stream.reconfigure(encoding="utf-8", errors="replace")
 
 
+def _skill_parent(base):
+    """Return the folders that can hold a skill, in search order.
+
+    The repository keeps each skill under skills/. Bob Shell reads
+    .bob/skills/. A stand-alone install holds the skill directly.
+    """
+    root = Path(base)
+    for parent in SKILL_PARENTS:
+        holder = root / parent if parent else root
+        if holder.is_dir():
+            yield holder
+
+
 def available_skills(root):
-    skills_dir = Path(root) / ".bob" / "skills"
-    if not skills_dir.is_dir():
-        return []
+    """List skill folders under a root, at the root or under skills/."""
     names = []
-    for entry in sorted(skills_dir.iterdir()):
-        if not entry.is_dir():
-            continue
-        if not (entry / "SKILL.md").is_file():
-            continue
-        names.append(entry.name)
+    for holder in _skill_parent(root):
+        for entry in sorted(holder.iterdir()):
+            if not entry.is_dir() or entry.name.startswith("."):
+                continue
+            if (entry / "SKILL.md").is_file() and entry.name not in names:
+                names.append(entry.name)
     return names
 
 
@@ -47,9 +59,10 @@ def listable_skills(root, fallback=None):
 
 
 def _skill_dir(base, name):
-    candidate = Path(base) / ".bob" / "skills" / name
-    if candidate.is_dir() and (candidate / "SKILL.md").is_file():
-        return candidate
+    for holder in _skill_parent(base):
+        candidate = holder / name
+        if candidate.is_dir() and (candidate / "SKILL.md").is_file():
+            return candidate
     return None
 
 

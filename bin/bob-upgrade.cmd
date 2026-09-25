@@ -8,5 +8,5 @@ if errorlevel 1 (
     exit /b 1
 )
 
-python "%DIR%..\.bob\skills\bob-upgrade\src\run.py" %*
+python "%DIR%..\skills\bob-upgrade\src\run.py" %*
 exit /b %errorlevel%
