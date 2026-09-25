@@ -13,7 +13,7 @@ from components.database import init_db
 from components.decisions import record_decision
 from components.rendering import render_index_page, render_pr_page
 
-DEFAULT_PORT = 8642
+DEFAULT_PORT = 2428
 
 
 def make_server(database_path, port=DEFAULT_PORT):
@@ -55,6 +55,17 @@ def make_server(database_path, port=DEFAULT_PORT):
                 return
             length = int(self.headers.get("Content-Length", 0))
             payload = json.loads(self.rfile.read(length) or b"{}")
+            if payload.get("kind") == "request_changes" and not (
+                payload.get("comment") or ""
+            ).strip():
+                self._send_html(
+                    json.dumps(
+                        {"ok": False,
+                         "error": "request_changes requires a comment"}
+                    ),
+                    400,
+                )
+                return
             connection = init_db(self.server.database_path)
             try:
                 record_decision(

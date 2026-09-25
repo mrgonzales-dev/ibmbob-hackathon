@@ -14,12 +14,14 @@ BADGE_CLASS = {
     "open": "open",
     "approved": "approved",
     "changes_requested": "changes",
+    "applied": "applied",
 }
 
 BADGE_LABEL = {
     "open": "Open",
     "approved": "Approved",
     "changes_requested": "Changes requested",
+    "applied": "Applied",
 }
 
 PAGE_CSS = """
@@ -35,6 +37,7 @@ h1 { font-size: 22px; font-weight: 600; margin: 0 0 8px; }
 .badge.open { background: #1f883d; color: #fff; }
 .badge.approved { background: #8250df; color: #fff; }
 .badge.changes { background: #cf222e; color: #fff; }
+.badge.applied { background: #8250df; color: #fff; }
 .card { background: #fff; border: 1px solid #d1d9e0; border-radius: 8px;
         padding: 16px; margin-bottom: 16px; }
 .card .meta { color: #59636e; font-size: 13px; margin-bottom: 8px; }
@@ -124,25 +127,22 @@ def render_pr_page(connection, pull_request_id):
     )
     badge = BADGE_LABEL[pull_request[1]]
     badge_class = BADGE_CLASS[pull_request[1]]
-    return f"""<!doctype html>
-<html><head><meta charset="utf-8"><title>PLAN-PR #{pull_request_id}</title>
-<style>{PAGE_CSS}</style></head><body>
-<header class="top">bob-pr &middot; PLAN-PR #{pull_request_id}</header>
-<main>
-<h1>{html.escape(pull_request[0])} <span class="badge {badge_class}">{badge}</span></h1>
-<div id="banner">Decision recorded. Tell the agent you are done.</div>
-<div class="card"><div class="meta">bob-agent opened this plan &middot; revision {revision_number}</div>
-<p>{html.escape(summary)}</p></div>
-{timeline}
-<div class="card"><div class="meta">Files changed ({len(file_paths)}) &middot; diffs computed from shadow copies</div>
-{files_section}</div>
-</main>
-<div class="review">
-<textarea id="comment" placeholder="Leave a review comment (optional)"></textarea>
+    is_applied = pull_request[1] == "applied"
+    review_block = (
+        "<div class='card'><div class='meta'>This PR is applied — "
+        "read-only audit snapshot. No actions available.</div></div>"
+        if is_applied
+        else f"""<div class="review">
+<textarea id="comment" oninput="syncButtons()" placeholder="Type a comment to request changes, or leave empty to approve"></textarea>
 <button id="btn-approve" onclick="decide('approve')">Approve plan</button>
-<button id="btn-changes" onclick="decide('request_changes')">Request changes</button>
+<button id="btn-changes" onclick="decide('request_changes')" disabled>Request changes</button>
 </div>
 <script>
+function syncButtons() {{
+  const hasComment = document.getElementById('comment').value.trim() !== '';
+  document.getElementById('btn-approve').disabled = hasComment;
+  document.getElementById('btn-changes').disabled = !hasComment;
+}}
 async function decide(kind) {{
   const comment = document.getElementById('comment').value;
   const response = await fetch('/decision', {{method:'POST',
@@ -154,21 +154,52 @@ async function decide(kind) {{
     document.getElementById('btn-changes').disabled = true;
   }}
 }}
-</script>
+</script>"""
+    )
+    return f"""<!doctype html>
+<html><head><meta charset="utf-8"><title>PLAN-PR #{pull_request_id}</title>
+<style>{PAGE_CSS}</style></head><body>
+<header class="top">bob-pr &middot; PLAN-PR #{pull_request_id}</header>
+<main>
+<p><a href="/">&larr; All pull requests</a></p>
+<h1>{html.escape(pull_request[0])} <span class="badge {badge_class}">{badge}</span></h1>
+<div id="banner">Decision recorded. Tell the agent you are done.</div>
+<div class="card"><div class="meta">bob-agent opened this plan &middot; revision {revision_number}</div>
+<p>{html.escape(summary)}</p></div>
+{timeline}
+<div class="card"><div class="meta">Files changed ({len(file_paths)}) &middot; diffs computed from shadow copies</div>
+{files_section}</div>
+</main>
+{review_block}
 </body></html>"""
 
 
-def render_index_page(connection):
-    """Render the PR list page, like GitHub's pull request index."""
-    pull_requests = list_prs(connection)
-    items = "".join(
+def _pr_list_items(pull_requests):
+    """Render a list of PR rows as linked items with status badges."""
+    return "".join(
         f"<li><a href='/pr/{pr['id']}'>#{pr['id']} {html.escape(pr['title'])}</a> "
         f"<span class='badge {BADGE_CLASS[pr['status']]}'>{pr['status']}</span></li>"
         for pr in pull_requests
+    )
+
+
+def render_index_page(connection):
+    """Render the PR list page with an Open section and an Applied audit
+    section, like GitHub's pull request index."""
+    pull_requests = list_prs(connection)
+    open_prs = [p for p in pull_requests if p["status"] != "applied"]
+    applied_prs = [p for p in pull_requests if p["status"] == "applied"]
+    applied_section = (
+        f"<h2>Applied (audit)</h2><ul class='files'>{_pr_list_items(applied_prs)}</ul>"
+        if applied_prs
+        else ""
     )
     return f"""<!doctype html>
 <html><head><meta charset="utf-8"><title>bob-pr</title>
 <style>{PAGE_CSS}</style></head><body>
 <header class="top">bob-pr &middot; pull requests</header>
-<main><h1>Plan PRs</h1><ul class="files">{items}</ul></main>
+<main><h1>Plan PRs</h1>
+<h2>Open</h2><ul class="files">{_pr_list_items(open_prs)}</ul>
+{applied_section}
+</main>
 </body></html>"""

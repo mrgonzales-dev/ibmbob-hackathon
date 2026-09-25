@@ -225,6 +225,61 @@ class SnapshotTests(unittest.TestCase):
         self.assertNotIn("src/a.py", result["applied"])
         self.assertEqual(self._read("src/a.py"), "user edited me\n")
 
+    def test_apply_uses_current_revision_files(self):
+        """apply_pr must install exactly the files of the latest revision:
+        files dropped by a revise are skipped, and files added by a revise
+        are installed even without a fresh snapshot."""
+        self._write("src/b.py", "b\n")
+        pid = bob_pr.create_pr(
+            self.conn, "T", "S", ["src/a.py", "src/b.py"]
+        )
+        bob_pr.snapshot_pr(self.conn, pid, self.root)
+        self._write(self._tmp_path(pid, "src/a.py"), "a edited\n")
+        self._write(self._tmp_path(pid, "src/b.py"), "b edited\n")
+        bob_pr.revise(self.conn, pid, "S2", ["src/a.py", "src/c.py"])
+        self._write(self._tmp_path(pid, "src/c.py"), "c new\n")
+        result = bob_pr.apply_pr(self.conn, pid, self.root)
+        self.assertIn("src/a.py", result["applied"])
+        self.assertIn("src/c.py", result["applied"])
+        self.assertNotIn("src/b.py", result["applied"])
+        self.assertEqual(self._read("src/b.py"), "b\n")
+
+    def test_apply_marks_pr_applied(self):
+        """apply_pr must set prs.status to 'applied' when every planned file
+        lands without a stale file."""
+        pid = bob_pr.create_pr(self.conn, "T", "S", ["src/a.py"])
+        bob_pr.snapshot_pr(self.conn, pid, self.root)
+        self._write(self._tmp_path(pid, "src/a.py"), "final\n")
+        bob_pr.apply_pr(self.conn, pid, self.root)
+        row = self.conn.execute(
+            "SELECT status FROM prs WHERE id=?", (pid,)
+        ).fetchone()
+        self.assertEqual(row[0], "applied")
+
+    def test_applied_pr_page_is_read_only(self):
+        """An applied PR page must show an audit banner and no decision
+        buttons, so it cannot be acted on again."""
+        pid = bob_pr.create_pr(self.conn, "T", "S", ["src/a.py"])
+        bob_pr.snapshot_pr(self.conn, pid, self.root)
+        self._write(self._tmp_path(pid, "src/a.py"), "final\n")
+        bob_pr.apply_pr(self.conn, pid, self.root)
+        html = bob_pr.render_pr_page(self.conn, pid)
+        self.assertIn("read-only", html)
+        self.assertNotIn('id="btn-approve"', html)
+
+    def test_decision_on_applied_pr_is_ignored(self):
+        """record_decision on an applied PR must be a no-op so a finished PR
+        stays a pure audit snapshot."""
+        pid = bob_pr.create_pr(self.conn, "T", "S", ["src/a.py"])
+        bob_pr.snapshot_pr(self.conn, pid, self.root)
+        self._write(self._tmp_path(pid, "src/a.py"), "final\n")
+        bob_pr.apply_pr(self.conn, pid, self.root)
+        bob_pr.record_decision(self.conn, pid, "request_changes", "too late")
+        row = self.conn.execute(
+            "SELECT status FROM prs WHERE id=?", (pid,)
+        ).fetchone()
+        self.assertEqual(row[0], "applied")
+
     def test_apply_creates_new_file(self):
         """apply_pr must create files that did not exist at snapshot time."""
         pid = bob_pr.create_pr(self.conn, "T", "S", ["src/new.py"])
@@ -270,6 +325,40 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(status, "APPROVED")
         self.assertEqual(comments, ["go"])
         conn2.close()
+
+    def test_review_buttons_follow_comment_state(self):
+        """The page must ship the Request changes button disabled and the
+        Approve button enabled, with JS that swaps the states as the user
+        types a comment."""
+        html = bob_pr.render_pr_page(self.conn, self.pid)
+        approve_tag = '<button id="btn-approve"'
+        changes_tag = '<button id="btn-changes"'
+        self.assertIn(approve_tag, html)
+        self.assertIn(changes_tag, html)
+        approve_line = next(l for l in html.splitlines() if approve_tag in l)
+        changes_line = next(l for l in html.splitlines() if changes_tag in l)
+        self.assertNotIn("disabled", approve_line)
+        self.assertIn("disabled", changes_line)
+        self.assertIn("oninput", html)
+
+    def test_post_request_changes_requires_comment(self):
+        """POST /decision with request_changes and an empty comment must be
+        rejected with 400 and must not change the PR status."""
+        body = json.dumps(
+            {"pr_id": self.pid, "kind": "request_changes", "comment": ""}
+        ).encode()
+        req = urllib.request.Request(
+            f"http://localhost:{self.port}/decision",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
+        with self.assertRaises(urllib.error.HTTPError) as ctx:
+            urllib.request.urlopen(req)
+        self.assertEqual(ctx.exception.code, 400)
+        row = self.conn.execute(
+            "SELECT status FROM prs WHERE id=?", (self.pid,)
+        ).fetchone()
+        self.assertEqual(row[0], "open")
 
     def test_get_pr_page_serves_html(self):
         """GET /pr/<id> must return HTTP 200 with the rendered PR page."""

@@ -18,6 +18,11 @@ def record_decision(connection, pull_request_id, kind, body):
     """
     if kind not in ("approve", "request_changes"):
         raise ValueError(f"unknown decision kind: {kind}")
+    current = connection.execute(
+        "SELECT status FROM prs WHERE id=?", (pull_request_id,)
+    ).fetchone()
+    if current and current[0] == "applied":
+        return
     revision = latest_revision(connection, pull_request_id)
     revision_id = revision[0] if revision else None
     connection.execute(
