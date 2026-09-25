@@ -61,6 +61,27 @@ Step-by-step instructions for the agent...
 - Never commit secrets, API keys, or generated artifacts to the repo.
 - Flag violations of these rules instead of silently working around them.
 
+## Git Commit Rules
+
+- Do not add the agent as a collaborator. Do not write `Co-Authored-By`,
+  `Generated with`, or `Signed-off-by` trailers (metadata lines at the end
+  of a commit message) for the agent.
+- Use conventional commits (the `type: subject` format). Use `feat:`,
+  `fix:`, `docs:`, `refactor:`, `test:`, or `chore:`.
+- Write the subject line in the imperative mood. Write "Add login page",
+  not "Added login page".
+- Keep the subject line at 50 characters or less. Do not end it with a
+  period.
+- Use the commit body to explain the why, not the what. Wrap the body at
+  72 characters.
+- Make atomic commits (one logical change per commit). Do not mix
+  unrelated changes in one commit.
+- Run `git status` and `git diff` before the commit. Stage only the files
+  that belong to the change.
+- Do not commit secrets, API keys, or generated artifacts.
+- Do not push, force-push, or rewrite history unless the user asks.
+- Do not commit when no changes exist.
+
 ## Communication Standard — ASD-STE100
 
 All AI-generated text (chat, reports, code comments, documentation,
