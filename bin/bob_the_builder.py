@@ -35,8 +35,9 @@ def skill_dirs(root):
     """Return every skill folder under a project root.
 
     A skill is a folder that holds a SKILL.md. In this repository each skill
-    sits under skills/. Bob Shell reads .bob/skills/, and a plain folder works
-    for a stand-alone install, so the search accepts all three places.
+    sits at the repository root. Bob Shell reads .bob/skills/, and a plain
+    folder works for a stand-alone install, so the search accepts all
+    three places.
     """
     base = Path(root)
     found = []
