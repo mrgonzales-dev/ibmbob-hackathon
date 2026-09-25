@@ -1,10 +1,11 @@
 :root {
-  --bg: #05050f;
-  --panel: #0a0a1a;
-  --ink: #e6e6f0;
-  --blue: #3b82f6;
-  --blue-bright: #60a5fa;
-  --blue-dim: #1e3a8a;
+  --bg: #090b12;
+  --panel: #0d1120;
+  --ink: #e8e9f1;
+  --muted: #9aa0b4;
+  --blue: #4f7fff;
+  --purple: #8b5cf6;
+  --dim: #2a3350;
 }
 
 * { box-sizing: border-box; }
@@ -14,10 +15,10 @@ body {
   font-family: "Courier New", ui-monospace, monospace;
   background: var(--bg);
   color: var(--ink);
-  /* grungy texture: scanlines + diagonal hatch */
+  /* grungy texture: scanlines + diagonal hatch, tinted blue/purple */
   background-image:
-    repeating-linear-gradient(0deg, rgba(59, 130, 246, 0.04) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(45deg, rgba(59, 130, 246, 0.03) 0 2px, transparent 2px 8px);
+    repeating-linear-gradient(0deg, rgba(79, 127, 255, 0.05) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(45deg, rgba(139, 92, 246, 0.04) 0 2px, transparent 2px 8px);
 }
 
 #app { min-height: 100vh; display: flex; align-items: center; }
@@ -27,12 +28,15 @@ body {
   margin: 64px auto;
   padding: 40px 48px;
   border: 3px solid var(--ink);
-  box-shadow: 14px 14px 0 var(--blue);
+  /* layered hard shadows fake the blue -> purple gradient */
+  box-shadow:
+    10px 10px 0 var(--blue),
+    20px 20px 0 var(--purple);
   background: var(--panel);
 }
 
 .sys {
-  color: var(--blue-bright);
+  color: var(--blue);
   font-size: 13px;
   margin: 0 0 16px;
 }
@@ -42,13 +46,18 @@ h1 {
   font-size: clamp(40px, 8vw, 72px);
   text-transform: uppercase;
   letter-spacing: 4px;
-  border-bottom: 4px solid var(--blue);
-  padding-bottom: 16px;
   line-height: 0.95;
+  padding-bottom: 16px;
+  border-bottom: 4px solid var(--blue);
+  /* blue -> purple gradient text */
+  background: linear-gradient(90deg, var(--blue), var(--purple));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .tagline {
-  color: var(--blue-bright);
+  color: var(--purple);
   font-size: 16px;
   margin: 16px 0 8px;
 }
@@ -56,8 +65,8 @@ h1 {
 .blurb {
   font-size: 15px;
   line-height: 1.7;
-  color: #b8b8cc;
-  border-left: 5px solid var(--blue-dim);
+  color: var(--muted);
+  border-left: 5px solid var(--dim);
   padding-left: 16px;
   margin: 24px 0;
 }
@@ -73,14 +82,17 @@ h1 {
 .skill {
   border: 2px solid var(--ink);
   padding: 14px 16px;
-  box-shadow: 6px 6px 0 var(--blue-dim);
+  box-shadow: 6px 6px 0 var(--dim);
   background: var(--bg);
+}
+
+.skill[data-status="live"] {
+  box-shadow: 6px 6px 0 var(--blue);
 }
 
 .skill[data-status="soon"] {
   opacity: 0.45;
   border-style: dashed;
-  box-shadow: 6px 6px 0 #222;
 }
 
 .skill-name {
@@ -90,7 +102,7 @@ h1 {
 }
 
 .skill-status {
-  color: var(--blue-bright);
+  color: var(--purple);
   margin-left: 8px;
   font-size: 13px;
 }
@@ -98,13 +110,13 @@ h1 {
 .skill-desc {
   margin: 8px 0 0;
   font-size: 14px;
-  color: #b8b8cc;
+  color: var(--muted);
 }
 
 .foot {
   margin: 0;
   font-size: 12px;
-  color: #555577;
+  color: #4a5068;
   text-transform: uppercase;
   letter-spacing: 2px;
 }
