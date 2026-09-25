@@ -3,50 +3,62 @@ const sessions = [
   {
     name: 'bob-pr',
     tag: 'live',
+    state: 'idle — task done',
     lines: [
-      { cls: 'cmd', text: '$ bob_pr new --title "Add projects" --files main.go,index.html' },
-      { cls: 'out', text: 'PR #1 created' },
-      { cls: 'cmd', text: '$ bob_pr snapshot 1' },
-      { cls: 'out', text: 'copied → .bob-pr/tmp/1/' },
-      { cls: 'cmd', text: '$ bob_pr diff 1' },
-      { cls: 'out', text: 'diffs computed from real files' },
-      { cls: 'cmd', text: '$ bob_pr serve' },
-      { cls: 'out', text: 'localhost:2428/pr/1' },
-      { cls: 'dim', text: '# you approve...' },
-      { cls: 'cmd', text: '$ bob_pr apply 1' },
-      { cls: 'ok',  text: 'APPLIED: 3 files' },
+      { cls: 'usr', text: '› add a projects section to the portfolio' },
+      { cls: 'thk', text: '⠿ planning...' },
+      { cls: 'tol', text: '◆ bob_pr new --files main.go,index.html,style.css' },
+      { cls: 'res', text: '  → PR #1 created' },
+      { cls: 'tol', text: '◆ bob_pr snapshot 1' },
+      { cls: 'res', text: '  → 3 files → .bob-pr/tmp/1/' },
+      { cls: 'tol', text: '◆ edit shadow copies (main.go, index.html, style.css)' },
+      { cls: 'tol', text: '◆ bob_pr diff 1' },
+      { cls: 'res', text: '  → 3 diffs computed' },
+      { cls: 'tol', text: '◆ bob_pr serve' },
+      { cls: 'res', text: '  → review at localhost:2428/pr/1' },
+      { cls: 'wat', text: '⏸ waiting — review the plan...' },
+      { cls: 'okl', text: '✓ APPROVED' },
+      { cls: 'tol', text: '◆ bob_pr apply 1' },
+      { cls: 'okl', text: '✓ APPLIED: 3 files' },
     ],
   },
   {
     name: 'bob-upgrade',
     tag: 'wip — simulated',
+    state: 'idle — task done',
     lines: [
-      { cls: 'dim', text: '# simulated session' },
-      { cls: 'cmd', text: '$ bob_upgrade scan' },
-      { cls: 'out', text: 'vue  3.4 → 3.5  safe' },
-      { cls: 'out', text: 'vite 5.x → 8.x  breaking' },
-      { cls: 'cmd', text: '$ bob_upgrade run vite' },
-      { cls: 'out', text: 'dry-run: build passes' },
-      { cls: 'cmd', text: '$ bob_upgrade open-pr' },
-      { cls: 'out', text: 'PR #2 "bump vite" opened' },
-      { cls: 'dim', text: '# you approve...' },
-      { cls: 'ok',  text: 'APPLIED — green' },
+      { cls: 'usr', text: '› upgrade our dependencies' },
+      { cls: 'thk', text: '⠿ scanning...' },
+      { cls: 'tol', text: '◆ bob_upgrade scan' },
+      { cls: 'res', text: '  → vue 3.4→3.5 safe' },
+      { cls: 'res', text: '  → vite 5.x→8.x breaking' },
+      { cls: 'tol', text: '◆ bob_upgrade run vite --dry-run' },
+      { cls: 'res', text: '  → build passes' },
+      { cls: 'tol', text: '◆ bob_pr open-pr "chore: bump vite"' },
+      { cls: 'res', text: '  → PR #2 opened for review' },
+      { cls: 'wat', text: '⏸ waiting — review the plan...' },
+      { cls: 'okl', text: '✓ APPROVED' },
+      { cls: 'okl', text: '✓ APPLIED — tests green' },
     ],
   },
   {
     name: 'bob-test',
     tag: 'soon — simulated',
+    state: 'needs revision',
     lines: [
-      { cls: 'dim', text: '# simulated session' },
-      { cls: 'cmd', text: '$ bob_test gen src/auth.py' },
-      { cls: 'out', text: '4 tests → test_auth.py' },
-      { cls: 'cmd', text: '$ bob_test run' },
-      { cls: 'out', text: '17 passed · cov 82%' },
-      { cls: 'cmd', text: '$ bob_test open-pr' },
-      { cls: 'out', text: 'PR #3 opened' },
-      { cls: 'dim', text: '# you: add null-token case' },
-      { cls: 'out', text: 'revision 2 pushed' },
-      { cls: 'ok',  text: 'APPLIED — 18 pass' },
+      { cls: 'usr', text: '› write tests for src/auth.py' },
+      { cls: 'thk', text: '⠿ generating...' },
+      { cls: 'tol', text: '◆ bob_test gen src/auth.py' },
+      { cls: 'res', text: '  → 4 tests → test_auth.py' },
+      { cls: 'tol', text: '◆ bob_test run' },
+      { cls: 'res', text: '  → 17 passed · cov 82%' },
+      { cls: 'tol', text: '◆ bob_pr open-pr "test: auth cases"' },
+      { cls: 'res', text: '  → PR #3 opened' },
+      { cls: 'wat', text: '⏸ waiting — review the plan...' },
+      { cls: 'bad', text: '✗ CHANGES REQUESTED' },
+      { cls: 'res', text: '  → "add a null-token case"' },
+      { cls: 'tol', text: '◆ bob_test gen --add null-token' },
+      { cls: 'okl', text: '✓ revision 2 pushed' },
     ],
   },
 ]
@@ -66,9 +78,11 @@ const sessions = [
           :key="i"
           class="line"
           :class="l.cls"
-          :style="{ '--d': si * 0.5 + i * 0.35 + 's' }"
+          :style="{ '--d': si * 0.6 + i * 0.35 + 's' }"
         >{{ l.text }}</p>
-        <p class="line" :style="{ '--d': si * 0.5 + s.lines.length * 0.35 + 's' }">$ <span class="cursor">▌</span></p>
+      </div>
+      <div class="term-status">
+        <span class="cursor">▌</span> agent {{ s.state }}
       </div>
     </div>
   </div>
@@ -86,9 +100,11 @@ const sessions = [
   border: 3px solid var(--ink);
   box-shadow: 6px 6px 0 var(--blue);
   background: #07090f;
-  font-size: 13px;
+  font-size: 12.5px;
   overflow: hidden;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .term:nth-child(2) { box-shadow: 6px 6px 0 var(--purple); }
@@ -129,29 +145,41 @@ const sessions = [
 }
 
 .term-body {
-  padding: 12px 12px 16px;
-  min-height: 270px;
+  padding: 14px 14px 8px;
+  flex: 1;
+}
+
+.term-status {
+  border-top: 2px solid var(--dim);
+  background: var(--panel);
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
 }
 
 .line {
-  margin: 0 0 5px;
+  margin: 0 0 7px;
   white-space: pre-wrap;
   word-break: break-all;
   opacity: 0;
   animation: type-in 0.01s var(--d) forwards;
 }
 
-.cmd { color: var(--ink); }
-.out { color: var(--muted); }
-.dim { color: #4a5068; font-style: italic; }
-.ok  { color: #4ade80; }
+.usr { color: var(--blue); font-weight: 700; }
+.thk { color: var(--purple); }
+.tol { color: var(--ink); }
+.res { color: var(--muted); }
+.wat { color: #facc15; }
+.okl { color: #4ade80; }
+.bad { color: #f87171; }
 
 .cursor { animation: blink 1s steps(1) infinite; color: var(--blue); }
 
 @keyframes type-in { to { opacity: 1; } }
 @keyframes blink { 50% { opacity: 0; } }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .terms { grid-template-columns: 1fr; }
 }
 
