@@ -6,13 +6,13 @@ const skills = [
     desc: 'Plans shipped as pull requests. Review diffs, approve, apply.',
   },
   {
-    name: 'bob-test',
-    status: 'soon',
+    name: 'bob-upgrade',
+    status: 'wip',
     desc: 'Skill slot reserved.',
   },
   {
-    name: 'bob-upgrade',
-    status: 'wip',
+    name: 'bob-test',
+    status: 'soon',
     desc: 'Skill slot reserved.',
   },
 ]
