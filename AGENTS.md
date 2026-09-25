@@ -42,9 +42,9 @@ three in one pass and needs no thread pool, because the whole scan takes about
 its own `explore` subagent. Never copy the rule table into a second file. Link
 the shared reference.
 
-Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`. Run
-`bob-install` to copy each root skill folder to the global path so it works
-in every project. A project copy wins over the global copy.
+Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`.
+Copy a root skill folder to `~/.bob/skills/` so it works in every project.
+A project copy wins over the global copy.
 
 Each skill is self-contained. A skill folder holds everything that skill needs,
 so one skill is one folder:
@@ -59,10 +59,6 @@ bob-upgrade/
     requirements.txt
     tests/
 ```
-
-`bin/` holds only toolkit-level files that no single skill owns: the banner,
-the installer, and the PATH launchers. The launchers are the only files that
-point at skill code, and they hold no logic.
 
 ### Our workflow
 
@@ -86,7 +82,6 @@ contain a `SKILL.md`.
     src/              # required: all scripts and data the skill needs
   agents/<persona>.md # optional: one role for a subagent
   commands/<name>.md  # optional: a slash command
-  bin/                # toolkit-level files: banner, installer, launchers
 ```
 
 Bob Shell reads `.bob/skills/` at the project root, and each root skill

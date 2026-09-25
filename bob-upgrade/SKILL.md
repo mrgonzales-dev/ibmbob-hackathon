@@ -128,7 +128,7 @@ when the `gh` command exists and the repository has a remote.
 ## Supporting files
 
 Everything this skill needs lives in this one folder. Nothing points outside
-it except the PATH launchers in `bin/`.
+it.
 
 | File | Use |
 |---|---|
@@ -140,6 +140,5 @@ it except the PATH launchers in `bin/`.
 | `src/requirements.txt` | Optional color output. The scanner runs without it. |
 | `src/tests/` | The tests for the files in this folder. |
 
-`bob-upgrade` is a PATH launcher in `bin/`. It calls `src/run.py` and adds no
-logic of its own. Run `bob-install` to copy this folder to `~/.bob/skills/` so
-Bob finds the skill in every project.
+Run `src/run.py` directly for the local scan. Copy this folder to
+`~/.bob/skills/` so Bob finds the skill in every project.
