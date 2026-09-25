@@ -11,7 +11,7 @@ const skills = [
     desc: 'Skill slot reserved.',
   },
   {
-    name: 'bob-docs',
+    name: 'bob-upgrade',
     status: 'soon',
     desc: 'Skill slot reserved.',
   },
