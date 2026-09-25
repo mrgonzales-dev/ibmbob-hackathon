@@ -1,4 +1,56 @@
 please read: this is where i will add my ideas for this project, so this will be a scratch pad
 
 
+CURRENT BEHAVIOR
 
+Commands: new, snapshot, diff, serve, decision, revise, apply, list.
+
+new creates a PR with status open and revision 1.
+snapshot copies the planned files into .bob-pr/tmp/<id>/ and saves a sha256
+hash of each original. Missing files get a null hash.
+The agent edits the shadow copies with its own tools. bob-pr never edits code.
+diff computes a real unified diff of copy vs original and stores it on the
+latest revision.
+serve runs a localhost server on port 2428. GET / lists PRs. GET /pr/<id>
+shows the review page. POST /decision records a click.
+The index page has two sections: Open and Applied (audit).
+Buttons: empty comment box gives an enabled Approve and a disabled Request
+changes. Any text in the comment box swaps that. A request_changes post
+without a comment gets a 400.
+decision prints APPROVED, CHANGES_REQUESTED, or PENDING plus comments.
+Verdicts only count the latest revision.
+revise adds a new revision and sets status back to open.
+apply installs the copies over the real files. It writes a temp file then
+renames it, so a crash cannot leave a half written file. If the real file
+changed since the snapshot, apply skips it and reports STALE. When all
+files land, the PR status becomes applied.
+An applied PR is read only. Its page has no buttons. The server ignores
+later decisions on it. It is an audit record.
+
+
+GAPS
+
+Timeline labels are wrong. Every event shows as user, even applied events.
+No close command. A rejected plan stays in the Open list forever.
+Diffs can go stale. If the agent edits copies after diff, the page shows old
+diffs. Compute diffs at render time instead of storing them.
+Re-snapshot clobbers un-applied copy edits. Snapshot copies real files over
+the shadow copies for every existing file.
+Shadow copies are never cleaned. .bob-pr/tmp/ grows forever.
+STALE results only show in CLI output, not on the page.
+The server holds code in memory. Page or renderer changes need a restart.
+No agent comment command. The agent cannot post notes on the timeline.
+No verification step. Approval does not check that the code compiles or
+tests pass.
+Same port for every project. Two projects cannot serve at once.
+
+
+NEXT
+
+Add a close command for rejected plans.
+Compute diffs at render time so the page always shows current copies.
+Fix timeline labels so events show the right actor.
+Clean shadow copies after apply or close.
+Let snapshot skip or warn about copies that already have edits.
+Fill the Our workflow section in AGENTS.md for the hackathon story.
+Dogfood the skill: run it on a real project with an agent following SKILL.md.
