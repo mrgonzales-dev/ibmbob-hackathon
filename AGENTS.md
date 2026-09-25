@@ -32,9 +32,12 @@ it from its description.
 | `bob-upgrade` | Ranked upgrade risk report. Runs every lane and merges them. |
 
 One command covers the whole workflow. The lanes are internal steps, not
-separate commands. The `deps`, `apis`, and `config` lanes run in parallel
-inside the one skill, then merge. Never copy the rule table into a second
-file. Link the shared reference.
+separate commands. The `deps`, `apis`, and `config` lanes read different parts
+of the project, then merge into one ranked list. The local scanner runs all
+three in one pass and needs no thread pool, because the whole scan takes about
+13 ms on the 18-file sample app. On the `--ai` path the agent gives each lane
+its own `explore` subagent. Never copy the rule table into a second file. Link
+the shared reference.
 
 Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`. Run
 `bob-install` to copy the skill to the global path so it works in every
@@ -65,8 +68,8 @@ point at skill code, and they hold no logic.
 - Workflow: Dependency upgrade analysis before a major framework version bump.
 - Pain today: Developers read changelogs and check packages by hand. The work takes hours.
 - Errors reach production. A missed package causes a broken deploy.
-- Solution: Bob scans the whole project in parallel. It prints a ranked risk report and a plan.
-- Impact: A Laravel 11 to 12 upgrade analyzed in seconds. The manual work takes two to four hours.
+- Solution: Bob scans the whole project against a committed rule table. It prints a ranked risk report. After you approve the report, the agent prints the upgrade plan.
+- Impact: A Laravel 11 to 12 upgrade analyzed in 13 ms on the 18-file sample app. The manual work takes two to four hours.
 
 ## Skill Structure
 
