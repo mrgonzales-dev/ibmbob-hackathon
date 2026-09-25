@@ -22,7 +22,10 @@
 > A terminal-native AI developer toolkit that understands your entire codebase
 > and helps you build, debug, review, and maintain it.
 
-We build in `.bob/` so every command ships as a skill that git tracks.
+We build at the repository root. This root is the future `.bob` directory:
+on install, `skills/` here maps to `.bob/skills/` in a project or in `~/`.
+Git tracks every file, so every command ships as a skill a teammate gets on
+clone.
 
 A **skill** is one user-facing command. The user types it, or a model activates
 it from its description.
@@ -40,14 +43,14 @@ its own `explore` subagent. Never copy the rule table into a second file. Link
 the shared reference.
 
 Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`. Run
-`bob-install` to copy the skill to the global path so it works in every
-project. A project copy wins over the global copy.
+`bob-install` to copy each skill from `skills/` at this root to the global
+path so it works in every project. A project copy wins over the global copy.
 
 Each skill is self-contained. A skill folder holds everything that skill needs,
 so one skill is one folder:
 
 ```
-.bob/skills/bob-upgrade/
+skills/bob-upgrade/
   SKILL.md          # required: frontmatter + instructions
   src/
     run.py          # the command: local scan, optional --ai to Bob Shell
@@ -73,20 +76,24 @@ point at skill code, and they hold no logic.
 
 ## Skill Structure
 
-Every skill lives in its own directory and must contain a `SKILL.md`.
+Every skill lives in its own directory under `skills/` and must contain a
+`SKILL.md`.
 
 ```
-.bob/
+<repo root>            # this root becomes .bob on install
   skills/<skill-name>/
     SKILL.md          # required: frontmatter + instructions
     src/              # required: all scripts and data the skill needs
   agents/<persona>.md # optional: one role for a subagent
   commands/<name>.md  # optional: a slash command
+  bin/                # toolkit-level files: banner, installer, launchers
 ```
 
-Bob Shell reads `.bob/skills/` at the project root. Git tracks `.bob/`, so a
-teammate receives every command on clone. Do not put a hackathon skill in
-`.opencode/`. That directory holds throwaway third-party skills and is ignored.
+Bob Shell reads `.bob/skills/` at the project root, and `skills/` at this
+root becomes that directory on install. Git tracks the root, so a teammate
+receives every command on clone. Do not put a hackathon skill in
+`.opencode/`. That directory holds throwaway third-party skills and is
+ignored.
 
 `SKILL.md` format:
 
