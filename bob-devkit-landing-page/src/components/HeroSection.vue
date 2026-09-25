@@ -7,10 +7,10 @@ import TerminalDemo from './TerminalDemo.vue'
     <p class="sys reveal">sys://skills.collection</p>
     <h1 class="reveal">
       Supercharge<br />
-      <span class="grad">Bob 2.0</span>
+      <span class="grad">IBM Bob 2.0</span>
     </h1>
     <p class="sub reveal">
-      A skill kit for the Bob 2.0 IDE. Real gates, not vibes.
+      A skill kit for the IBM Bob 2.0 IDE. Real gates, not vibes.
     </p>
     <div class="cta-row reveal">
       <a class="btn primary" href="#skills">browse the skills</a>
