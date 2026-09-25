@@ -5,3 +5,6 @@
 .devin
 .codeium
 .cursor
+.bob-pr/
+__pycache__/
+*.pyc
