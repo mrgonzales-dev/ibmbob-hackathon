@@ -3,6 +3,7 @@
     <a class="logo" href="#top">BOB<span>DEVKIT</span></a>
     <nav class="links">
       <a href="#demo">demo</a>
+      <a href="#install">install</a>
       <a href="#skills">skills</a>
       <a href="#workflow">workflow</a>
       <a class="gh" href="https://github.com/mrgonzales-dev/ibmbob-hackathon">github</a>

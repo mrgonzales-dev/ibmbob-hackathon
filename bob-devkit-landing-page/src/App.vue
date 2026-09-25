@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import NavBar from './components/NavBar.vue'
 import HeroSection from './components/HeroSection.vue'
+import InstallSection from './components/InstallSection.vue'
 import SkillGrid from './components/SkillGrid.vue'
 import WorkflowSection from './components/WorkflowSection.vue'
 import SiteFooter from './components/SiteFooter.vue'
@@ -20,6 +21,7 @@ onMounted(() => {
   <NavBar />
   <main>
     <HeroSection />
+    <InstallSection />
     <SkillGrid />
     <WorkflowSection />
   </main>
