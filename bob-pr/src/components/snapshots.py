@@ -120,23 +120,30 @@ def _readlines_or_empty(path):
 def apply_pr(connection, pull_request_id, project_root):
     """Install shadow copies over the real files, atomically.
 
+    Drives off the latest revision's file list — the same list the reviewer
+    approved — so the applied change always matches the reviewed diff.
     For each planned file: skip when the real file's sha256 differs from the
-    snapshot manifest (the user edited it during review → 'stale'), otherwise
-    write the copy to <path>.bobtmp and os.replace it into place so the swap
-    cannot leave a half-written file. Records an 'applied' event.
+    snapshot manifest (the user edited it during review → 'stale'), or when
+    no snapshot hash exists to verify against. Otherwise write the copy to
+    <path>.bobtmp and os.replace it into place so the swap cannot leave a
+    half-written file. Records an 'applied' event.
 
     Returns {"applied": [...], "stale": [...]}.
     """
+    revision = latest_revision(connection, pull_request_id)
+    file_paths = json.loads(revision[3]) if revision else []
     manifest = _read_manifest(project_root, pull_request_id)
     shadow_root = _shadow_dir(project_root, pull_request_id)
     applied, stale = [], []
-    for relative_path, info in manifest.items():
+    for relative_path in file_paths:
         real_path = os.path.join(project_root, relative_path)
         shadow_path = os.path.join(shadow_root, relative_path)
         if not os.path.exists(shadow_path):
             continue
+        recorded_hash = manifest.get(relative_path, {}).get("sha256")
         if os.path.exists(real_path) and (
-            _sha256_of_file(real_path) != info["sha256"]
+            recorded_hash is None
+            or _sha256_of_file(real_path) != recorded_hash
         ):
             stale.append(relative_path)
             continue
@@ -145,6 +152,11 @@ def apply_pr(connection, pull_request_id, project_root):
         shutil.copy2(shadow_path, temp_path)
         os.replace(temp_path, real_path)
         applied.append(relative_path)
+    if applied and not stale:
+        connection.execute(
+            "UPDATE prs SET status='applied' WHERE id=?",
+            (pull_request_id,),
+        )
     connection.execute(
         "INSERT INTO events (pr_id, revision_id, kind, body, created_at) "
         "VALUES (?, ?, 'applied', ?, ?)",
