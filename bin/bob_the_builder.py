@@ -28,9 +28,38 @@ def _force_utf8():
             stream.reconfigure(encoding="utf-8", errors="replace")
 
 
+SKILL_PARENTS = ("", "skills", ".bob/skills")
+
+
+def skill_dirs(root):
+    """Return every skill folder under a project root.
+
+    A skill is a folder that holds a SKILL.md. In this repository each skill
+    sits under skills/. Bob Shell reads .bob/skills/, and a plain folder works
+    for a stand-alone install, so the search accepts all three places.
+    """
+    base = Path(root)
+    found = []
+    for parent in SKILL_PARENTS:
+        holder = base / parent if parent else base
+        if not holder.is_dir():
+            continue
+        found.extend(
+            sorted(
+                entry
+                for entry in holder.iterdir()
+                if entry.is_dir()
+                and not entry.name.startswith(".")
+                and (entry / "SKILL.md").is_file()
+            )
+        )
+    return found
+
+
 def is_toolkit_root(candidate):
-    bob_dir = candidate / ".bob"
-    return (bob_dir / "skills").is_dir()
+    if (Path(candidate) / ".bob" / "skills").is_dir():
+        return True
+    return bool(skill_dirs(candidate))
 
 
 def find_repo_root(start, stop=None):
@@ -108,13 +137,8 @@ def read_skill(path):
 
 
 def list_skills(root):
-    skills_dir = Path(root) / ".bob" / "skills"
-    if not skills_dir.is_dir():
-        return []
     found = []
-    for entry in sorted(skills_dir.iterdir()):
-        if not entry.is_dir():
-            continue
+    for entry in skill_dirs(root):
         item = read_skill(entry / "SKILL.md")
         if item is not None:
             found.append(item)

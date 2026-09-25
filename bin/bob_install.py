@@ -4,6 +4,10 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from bob_the_builder import skill_dirs
+
 TOOLKIT_ROOT = Path(__file__).resolve().parents[1]
 SKILL_NAMES = ("bob-upgrade",)
 
@@ -34,13 +38,20 @@ def same_tree(left, right):
     return True
 
 
+def skill_source(root, name):
+    for entry in skill_dirs(root):
+        if entry.name == name:
+            return entry
+    return None
+
+
 def install(destination=None, dry_run=False):
     destination = destination or global_root()
     results = []
     for name in SKILL_NAMES:
-        source = TOOLKIT_ROOT / ".bob" / "skills" / name
+        source = skill_source(TOOLKIT_ROOT, name)
         target = destination / name
-        if not source.is_dir():
+        if source is None:
             results.append((name, "missing in the toolkit"))
             continue
         if target.is_dir() and same_tree(source, target):
