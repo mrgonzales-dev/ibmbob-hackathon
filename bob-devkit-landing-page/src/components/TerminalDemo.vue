@@ -86,7 +86,7 @@ const sessions = [
   border: 3px solid var(--ink);
   box-shadow: 6px 6px 0 var(--blue);
   background: #07090f;
-  font-size: 11.5px;
+  font-size: 13px;
   overflow: hidden;
   min-width: 0;
 }

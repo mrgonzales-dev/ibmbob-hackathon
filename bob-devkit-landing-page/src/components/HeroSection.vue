@@ -25,9 +25,9 @@ import TerminalDemo from './TerminalDemo.vue'
 
 <style scoped>
 .hero {
-  max-width: 900px;
+  max-width: 1440px;
   margin: 0 auto;
-  padding: 96px 24px 80px;
+  padding: 96px 32px 80px;
   text-align: center;
 }
 
@@ -101,7 +101,6 @@ h1 {
 }
 
 .term-wrap {
-  max-width: 1200px;
   margin: 0 auto;
   text-align: left;
 }
