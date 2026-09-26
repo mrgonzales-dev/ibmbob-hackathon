@@ -11,7 +11,12 @@ const steps = [
   <section class="workflow" id="workflow">
     <h2 class="reveal">how it works</h2>
     <ol class="steps">
-      <li v-for="(s, i) in steps" :key="i" class="step reveal">
+      <li
+        v-for="(s, i) in steps"
+        :key="i"
+        class="step reveal"
+        :style="{ '--reveal-delay': `${i * 120}ms` }"
+      >
         <span class="step-num">{{ String(i + 1).padStart(2, '0') }}</span>
         <div>
           <h3>{{ s[0] }}</h3>
@@ -45,11 +50,42 @@ h2 {
 }
 
 .step {
+  position: relative;
   display: flex;
   gap: 24px;
   align-items: baseline;
-  border-left: 5px solid var(--dim);
-  padding: 18px 0 18px 20px;
+  padding: 18px 0 18px 25px;
+}
+
+.step::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 5px;
+  background: linear-gradient(180deg, var(--blue), var(--purple));
+  transform: scaleY(0);
+  transform-origin: top;
+  transition:
+    transform 550ms cubic-bezier(0.22, 1, 0.36, 1) calc(var(--reveal-delay, 0ms) + 250ms),
+    box-shadow 250ms ease;
+}
+
+.step.visible::before {
+  transform: scaleY(1);
+}
+
+.step:hover::before {
+  box-shadow: 0 0 14px var(--blue), 0 0 32px var(--purple);
+}
+
+.step > div {
+  transition: transform 300ms ease;
+}
+
+.step:hover > div {
+  transform: translateX(6px);
 }
 
 .step-num {
@@ -57,6 +93,12 @@ h2 {
   font-weight: 700;
   color: var(--blue);
   min-width: 48px;
+  transition: color 300ms ease, text-shadow 300ms ease;
+}
+
+.step:hover .step-num {
+  color: var(--purple);
+  text-shadow: 0 0 18px rgba(139, 92, 246, 0.55);
 }
 
 .step h3 {
@@ -71,5 +113,18 @@ h2 {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step::before {
+    transform: none;
+    transition: none;
+  }
+  .step > div {
+    transition: none;
+  }
+  .step:hover > div {
+    transform: none;
+  }
 }
 </style>
