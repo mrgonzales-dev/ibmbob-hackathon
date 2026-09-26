@@ -2,22 +2,18 @@
   <img src="resources/bob_devkit_banner.png" alt="Bob devkit — Build > Automate > Ship" width="100%">
 </p>
 
-# IBM Bob 2.0 Hackathon — Bob Devkit
+# Bob Devkit
 
-A terminal-native AI developer toolkit built on **IBM Bob 2.0**. Each command
-ships as a self-contained **skill** (one folder, one `SKILL.md`). A teammate
-gets every command on `git clone`, because Git tracks the whole repo.
+A terminal-native AI developer toolkit. Each command ships as a
+self-contained **skill** (one folder, one `SKILL.md`), so any agent that
+reads a skills directory — IBM Bob, Claude Code, Cursor, Devin — can use
+every command after one install.
 
 The devkit improves the **dependency upgrade** and **change impact**
 developer workflows. Today these jobs take hours of manual changelog reading
-and miss packages that break production. Bob scans the whole project against
-a committed rule table, prints a ranked report, then writes the upgrade plan
-after you approve it.
-
-> Built for the IBM Bob 2.0 hackathon. The problem statement: improve a
-> developer workflow (onboarding, debugging, code review, testing,
-> maintenance, or release) using Agent mode, parallel tasks, subagents, and
-> document understanding.
+and miss packages that break production. The toolkit scans the whole project
+against a committed rule table, prints a ranked report, then writes the
+upgrade plan after you approve it.
 
 ---
 
@@ -72,7 +68,7 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 | `bobdevkit/bob-upgrade-check/` | The upgrade risk analyzer skill. |
 | `bobdevkit/bob-impact/` | The change impact analyzer skill. |
 | `bobdevkit/bob-pr/` | The plan-as-PR review gate skill. |
-| `bob-devkit-landing-page/` | Vue 3 + Vite landing page for the demo. |
+| `bob-devkit-landing-page/` | Vue 3 + Vite landing page. |
 | `AGENTS.md` | The agent rules: toolkit, workflow, skill structure, commit rules, and the ASD-STE100 communication standard. |
 
 ---
