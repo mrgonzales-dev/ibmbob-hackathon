@@ -119,10 +119,7 @@ function Get-AgentDir {
 Write-Banner
 
 # --- resolve the source tree ---------------------------------------------
-$ScriptDir = $null
-if ($MyInvocation.MyCommand.Path) {
-    $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-}
+$ScriptDir = if ($MyInvocation.MyCommand.Path) { Split-Path -Parent $MyInvocation.MyCommand.Path } else { $null }
 $Tmp = $null
 
 if ($ScriptDir -and (Test-Path "$ScriptDir\bob-pr\SKILL.md")) {
