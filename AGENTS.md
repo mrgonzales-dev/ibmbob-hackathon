@@ -36,7 +36,6 @@ a `SKILL.md` from its skills directory can use them.
 | `bob-upgrade-check` | Ranked upgrade risk report. Scans deps, APIs, and config. Merges into one HIGH/MED/LOW table. |
 | `bob-impact` | Change impact (blast radius) report. Traces callers, tables, and tests from git diff. |
 | `bob-pr` | Plan-as-PR review gate. Serves a plan on localhost. Waits for approve or request-changes before any file is touched. |
-| `bobdevkit` | The package and installer. Holds all three skills and copies them into the agent config dir the project uses. |
 
 The lanes inside each skill are internal steps, not separate commands.
 The `bob-upgrade-check` scanner runs all three lanes (`deps`, `apis`, `config`)

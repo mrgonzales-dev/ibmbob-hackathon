@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="resources/bob_devkit_banner.png" alt="Bob devkit — Build > Automate > Ship" width="100%">
+</p>
+
 # IBM Bob 2.0 Hackathon — Bob Devkit
 
 A terminal-native AI developer toolkit built on **IBM Bob 2.0**. Each command
@@ -38,7 +42,6 @@ project). A project copy wins over the global copy.
 | `bob-upgrade-check` | `bob-upgrade-check` | Major framework upgrade risk analyzer. Scans a PHP project for the package, code, and config changes a version bump causes. Returns one ranked HIGH/MED/LOW report and an optional phased plan. |
 | `bob-impact` | `bob-impact` | Change impact analyzer. Reads `git diff`, traces the direct callers, database tables, and tests that reference the changed code. Prints one ranked blast-radius report. Add `--regress` to run the affected tests. |
 | `bob-pr` | `bob-pr` | Serves a plan as a GitHub-style pull-request page on localhost. You approve or request changes before any real project file is touched. |
-| `bobdevkit` | `bobdevkit` | The package and installer. Holds all three skills. Its `SKILL.md` detects which AI agent config dir the project uses and copies the skills into it. Agent-agnostic. |
 
 ### Skill structure
 
@@ -76,55 +79,24 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 
 ## Get started
 
-### Option A — Clone the full repo
-
-```shell
-git clone https://github.com/mrgonzales-dev/ibmbob-hackathon.git
-cd ibmbob-hackathon
-```
-
-All three skills sit inside `bobdevkit/`. Copy the ones you need to
-`~/.bob/skills/` so Bob finds them in every project:
-
 ```shell
 # macOS / Linux
-cp -r bobdevkit/bob-upgrade-check ~/.bob/skills/
-cp -r bobdevkit/bob-impact        ~/.bob/skills/
-cp -r bobdevkit/bob-pr            ~/.bob/skills/
+curl -fsSL https://raw.githubusercontent.com/mrgonzales-dev/ibmbob-hackathon/main/bobdevkit/install.sh | sh
 
 # Windows PowerShell
-Copy-Item -Recurse bobdevkit\bob-upgrade-check $HOME\.bob\skills\
-Copy-Item -Recurse bobdevkit\bob-impact        $HOME\.bob\skills\
-Copy-Item -Recurse bobdevkit\bob-pr            $HOME\.bob\skills\
+irm https://raw.githubusercontent.com/mrgonzales-dev/ibmbob-hackathon/main/bobdevkit/install.ps1 | iex
 ```
 
-### Option B — Download one skill without cloning
-
-Use `npx degit` to pull a single skill folder straight into your project's
-`.bob/skills/` directory. No `git clone` needed.
+The installer downloads the package itself — no clone needed. It detects
+your agent's config dir (`.bob/`, `.devin/`, `.claude/`, `.cursor/`) and
+installs all three skills into it. Works with IBM Bob, Claude Code,
+Cursor, Devin, or any agent that reads a skills directory.
 
 ```shell
-# upgrade risk analyzer
-npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-upgrade-check .bob/skills/bob-upgrade-check
-
-# change impact analyzer
-npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-impact .bob/skills/bob-impact
-
-# plan-as-PR review gate
-npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-pr .bob/skills/bob-pr
+install.sh --global        # install to ~/.bob/skills, every project
+install.sh --uninstall     # remove the three skills
+# same flags on Windows:  .\install.ps1 -Global  /  -Uninstall
 ```
-
-`npx degit` requires Node.js 16 or later. It downloads the folder contents
-without the full Git history.
-
-### Option C — Activate all skills from any AI agent chat
-
-Paste the prompt below into any AI coding agent (Bob Shell, Claude Code,
-Cursor, Devin, etc.). The agent runs all three `npx degit` commands, reads
-each downloaded `SKILL.md`, and immediately follows its instructions. No
-manual copy step needed.
-
-> Run `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-upgrade-check .bob/skills/bob-upgrade-check` then `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-impact .bob/skills/bob-impact` then `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-pr .bob/skills/bob-pr` and follow the generated skill instructions for all three now. Read the complete output of each, redirecting to a temporary file first if necessary. Resolve relative paths from the supporting-files directory each skill provides.
 
 ### Run the landing page
 
