@@ -3,54 +3,84 @@ please read: this is where i will add my ideas for this project, so this will be
 
 CURRENT BEHAVIOR
 
-Commands: new, snapshot, diff, serve, decision, revise, apply, list.
+Commands: new, snapshot, diff, serve, stop, decision, revise, apply,
+close, comment, list.
 
 new creates a PR with status open and revision 1.
 snapshot copies the planned files into .bob-pr/tmp/<id>/ and saves a sha256
-hash of each original. Missing files get a null hash.
+hash of each original. Missing files get a null hash. A shadow copy that
+already holds edits is kept, not clobbered — the manifest marks it
+kept_edits and the CLI prints a warning.
 The agent edits the shadow copies with its own tools. bob-pr never edits code.
 diff computes a real unified diff of copy vs original and stores it on the
-latest revision.
-serve runs a localhost server on port 2428. GET / lists PRs. GET /pr/<id>
-shows the review page. POST /decision records a click.
-The index page has two sections: Open and Applied (audit).
+latest revision (revisions.diffs_json). If the latest revision has no
+planned files it prints a warning naming the problem. The page diffs live
+shadow copies at render time while .bob-pr/tmp/<id>/ exists, so edits
+after diff still show. apply refreshes the stored diff before it lands
+files, then deletes the shadow dir — the applied page keeps showing the
+diff that landed.
+serve spawns a detached background child running `serve --foreground` and
+returns immediately, so the agent's turn is never blocked. The child
+writes serve.port and serve.pid next to the database when its socket
+binds; the parent polls serve.port for up to 5 s and prints the real URL
+plus the pid. Child output goes to serve.log. Port 2428 is the default; a
+taken port falls back to an OS-assigned free port. --port <n> sets a
+preference. stop reads serve.pid, sends SIGTERM, and removes the state
+files; with no server recorded it prints a clean message.
+GET / lists PRs. GET /pr/<id> shows the review page. POST /decision
+records a click. Bad JSON, a missing pr_id, or an unknown kind gets a 400.
+An unknown pr_id gets a 404.
+The index page has three sections: Open (every non-terminal PR — open,
+approved, changes_requested, or any unknown status), Closed, and Applied
+(audit). Closed and Applied only render when they hold a PR.
 Buttons: empty comment box gives an enabled Approve and a disabled Request
-changes. Any text in the comment box swaps that. A request_changes post
-without a comment gets a 400.
-decision prints APPROVED, CHANGES_REQUESTED, or PENDING plus comments.
-Verdicts only count the latest revision.
-revise adds a new revision and sets status back to open.
+changes. Any text in the comment box swaps that. When no diffs exist —
+an empty file list or a revision never diffed — a warning card shows and
+the buttons stay disabled, so nothing can be approved sight-unseen.
+A successful click navigates to /pr/<id>#<kind>; the page reads the hash
+and shows a bottom-right toast telling the user to inform the agent.
+decision prints APPROVED, CHANGES_REQUESTED, PENDING, or UNKNOWN plus
+comments. Verdicts only count the latest revision. Approved is locked:
+further approve/request-changes clicks are ignored and the page turns
+read-only. approved only ends at apply (status applied) or close.
+comment writes a 'comment' event on the latest revision. It never moves
+the verdict. Unknown PR ids are refused.
+revise adds a new revision and sets status back to open. An omitted or
+empty --files inherits the previous revision's file list, so a revision
+can never lose its files silently. It refuses (returns None, CLI prints
+an error) on an unknown PR id or a terminal PR.
 apply installs the copies over the real files. It writes a temp file then
-renames it, so a crash cannot leave a half written file. If the real file
-changed since the snapshot, apply skips it and reports STALE. When all
-files land, the PR status becomes applied.
-An applied PR is read only. Its page has no buttons. The server ignores
-later decisions on it. It is an audit record.
+renames it, so a crash cannot leave a half written file. Per planned file:
+a changed original reports STALE, a missing shadow copy reports MISSING.
+When applied files exist and none are stale or missing, the PR status
+becomes applied and the shadow dir is deleted. On a terminal or unknown PR
+apply returns None and writes nothing.
+close sets status to closed, writes a 'closed' event, and deletes the
+shadow dir. It refuses terminal and unknown PRs.
+applied and closed are terminal. Both refuse revise, decision, apply, and
+close. Their pages are read only and carry no buttons.
+The timeline labels each event with its actor: user for decisions, agent
+for comments, bob-pr for lifecycle events (applied, closed).
+The applied event body carries "applied=[...] stale=[...] missing=[...]".
+The reviewer sees it after apply ran.
+Badges: known statuses map to a label and a color. An unknown status falls
+back to its raw text — the page never crashes.
 
 
 GAPS
 
-Timeline labels are wrong. Every event shows as user, even applied events.
-No close command. A rejected plan stays in the Open list forever.
-Diffs can go stale. If the agent edits copies after diff, the page shows old
-diffs. Compute diffs at render time instead of storing them.
-Re-snapshot clobbers un-applied copy edits. Snapshot copies real files over
-the shadow copies for every existing file.
-Shadow copies are never cleaned. .bob-pr/tmp/ grows forever.
-STALE results only show in CLI output, not on the page.
+Stale and missing results stay buried. They reach the page only inside the
+applied event body, after apply ran. The reviewer cannot see drift while
+deciding. Live diffs show shadow-vs-current-original, so a file the user
+edited during review diffs against the new text — that warns silently.
 The server holds code in memory. Page or renderer changes need a restart.
-No agent comment command. The agent cannot post notes on the timeline.
 No verification step. Approval does not check that the code compiles or
 tests pass.
-Same port for every project. Two projects cannot serve at once.
 
 
 NEXT
 
-Add a close command for rejected plans.
-Compute diffs at render time so the page always shows current copies.
-Fix timeline labels so events show the right actor.
-Clean shadow copies after apply or close.
-Let snapshot skip or warn about copies that already have edits.
-Fill the Our workflow section in AGENTS.md for the hackathon story.
-Dogfood the skill: run it on a real project with an agent following SKILL.md.
+Surface drift during review — flag files whose original changed since the
+snapshot on the PR page, before the reviewer decides.
+Add an optional verification step — run a check command before apply, or
+record its result on the timeline.

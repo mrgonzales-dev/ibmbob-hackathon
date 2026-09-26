@@ -16,8 +16,14 @@ from components.rendering import render_index_page, render_pr_page
 DEFAULT_PORT = 2428
 
 
-def make_server(database_path, port=DEFAULT_PORT):
-    """Create (but do not start) the HTTP server for the review pages."""
+def make_server(database_path, port=DEFAULT_PORT, project_root=None):
+    """Create (but do not start) the HTTP server for the review pages.
+
+    When the requested port is taken, falls back to an OS-assigned free
+    port — the caller reads the real port from server.server_address.
+    project_root lets the pages diff live shadow copies; without it they
+    render the stored diffs.
+    """
 
     class Handler(BaseHTTPRequestHandler):
         """Route requests to the PR pages and the decision endpoint."""
@@ -41,7 +47,11 @@ def make_server(database_path, port=DEFAULT_PORT):
                 match = re.fullmatch(r"/pr/(\d+)", self.path)
                 if match:
                     self._send_html(
-                        render_pr_page(connection, int(match.group(1)))
+                        render_pr_page(
+                            connection,
+                            int(match.group(1)),
+                            self.server.project_root,
+                        )
                     )
                     return
                 self._send_html("<h1>404</h1>", 404)
@@ -49,31 +59,49 @@ def make_server(database_path, port=DEFAULT_PORT):
                 connection.close()
 
         def do_POST(self):
-            """Record a decision click posted as JSON {pr_id, kind, comment}."""
+            """Record a decision click posted as JSON {pr_id, kind, comment}.
+
+            Bad JSON, a missing or non-integer pr_id, and an unknown kind
+            get a 400. A pr_id that no PR owns gets a 404.
+            """
             if self.path != "/decision":
                 self._send_html("<h1>404</h1>", 404)
                 return
+
+            def reject(code, error):
+                self._send_html(json.dumps({"ok": False, "error": error}), code)
+
             length = int(self.headers.get("Content-Length", 0))
-            payload = json.loads(self.rfile.read(length) or b"{}")
-            if payload.get("kind") == "request_changes" and not (
-                payload.get("comment") or ""
-            ).strip():
-                self._send_html(
-                    json.dumps(
-                        {"ok": False,
-                         "error": "request_changes requires a comment"}
-                    ),
-                    400,
-                )
+            try:
+                payload = json.loads(self.rfile.read(length) or b"{}")
+            except ValueError:
+                reject(400, "body must be JSON")
+                return
+            if not isinstance(payload, dict):
+                reject(400, "body must be a JSON object")
+                return
+            try:
+                pull_request_id = int(payload["pr_id"])
+            except (KeyError, TypeError, ValueError):
+                reject(400, "pr_id is required")
+                return
+            kind = payload.get("kind")
+            if kind not in ("approve", "request_changes"):
+                reject(400, "kind must be approve or request_changes")
+                return
+            comment = payload.get("comment", "")
+            if kind == "request_changes" and not str(comment).strip():
+                reject(400, "request_changes requires a comment")
                 return
             connection = init_db(self.server.database_path)
             try:
-                record_decision(
-                    connection,
-                    int(payload["pr_id"]),
-                    payload["kind"],
-                    payload.get("comment", ""),
-                )
+                exists = connection.execute(
+                    "SELECT 1 FROM prs WHERE id=?", (pull_request_id,)
+                ).fetchone()
+                if exists is None:
+                    reject(404, "unknown PR")
+                    return
+                record_decision(connection, pull_request_id, kind, comment)
             finally:
                 connection.close()
             self._send_html(json.dumps({"ok": True}))
@@ -81,6 +109,10 @@ def make_server(database_path, port=DEFAULT_PORT):
         def log_message(self, *args):
             """Silence the default per-request log line."""
 
-    server = ThreadingHTTPServer(("localhost", port), Handler)
+    try:
+        server = ThreadingHTTPServer(("localhost", port), Handler)
+    except OSError:
+        server = ThreadingHTTPServer(("localhost", 0), Handler)
     server.database_path = database_path
+    server.project_root = project_root
     return server

@@ -12,7 +12,11 @@ import json
 import os
 import shutil
 
-from components.pull_requests import latest_revision, utc_now
+from components.pull_requests import (
+    TERMINAL_STATUSES,
+    latest_revision,
+    utc_now,
+)
 
 
 def _shadow_dir(project_root, pull_request_id):
@@ -49,6 +53,8 @@ def snapshot_pr(connection, pull_request_id, project_root):
 
     Writes .bob-pr/tmp/<id>/manifest.json mapping each path to its sha256.
     Files that do not exist yet get a null hash and count as new files.
+    A shadow copy that already holds edits is kept, not clobbered — its
+    manifest entry gets "kept_edits": True so the CLI can warn.
     Returns the manifest dict.
     """
     revision = latest_revision(connection, pull_request_id)
@@ -60,9 +66,17 @@ def snapshot_pr(connection, pull_request_id, project_root):
             _shadow_dir(project_root, pull_request_id), relative_path
         )
         if os.path.exists(real_path):
+            file_hash = _sha256_of_file(real_path)
+            if os.path.exists(shadow_path) and (
+                _sha256_of_file(shadow_path) != file_hash
+            ):
+                manifest[relative_path] = {
+                    "sha256": file_hash,
+                    "kept_edits": True,
+                }
+                continue
             os.makedirs(os.path.dirname(shadow_path), exist_ok=True)
             shutil.copy2(real_path, shadow_path)
-            file_hash = _sha256_of_file(real_path)
         else:
             file_hash = None
         manifest[relative_path] = {"sha256": file_hash}
@@ -70,6 +84,32 @@ def snapshot_pr(connection, pull_request_id, project_root):
     with open(_manifest_path(project_root, pull_request_id), "w") as handle:
         json.dump(manifest, handle, indent=2)
     return manifest
+
+
+def live_diffs(project_root, pull_request_id, file_paths):
+    """Compute shadow-vs-original diffs at call time. No DB write.
+
+    A planned file with no shadow copy yields an empty diff — a missing
+    copy means 'not written yet', never a deletion.
+    """
+    diffs = {}
+    for relative_path in file_paths:
+        real_path = os.path.join(project_root, relative_path)
+        shadow_path = os.path.join(
+            _shadow_dir(project_root, pull_request_id), relative_path
+        )
+        if not os.path.exists(shadow_path):
+            diffs[relative_path] = ""
+            continue
+        diffs[relative_path] = "".join(
+            difflib.unified_diff(
+                _readlines_or_empty(real_path),
+                _readlines_or_empty(shadow_path),
+                fromfile=relative_path,
+                tofile=relative_path,
+            )
+        )
+    return diffs
 
 
 def compute_diffs(connection, pull_request_id, project_root):
@@ -83,23 +123,7 @@ def compute_diffs(connection, pull_request_id, project_root):
     if not revision:
         return {}
     file_paths = json.loads(revision[3])
-    diffs = {}
-    for relative_path in file_paths:
-        real_path = os.path.join(project_root, relative_path)
-        shadow_path = os.path.join(
-            _shadow_dir(project_root, pull_request_id), relative_path
-        )
-        original_lines = _readlines_or_empty(real_path)
-        edited_lines = _readlines_or_empty(shadow_path)
-        diff_text = "".join(
-            difflib.unified_diff(
-                original_lines,
-                edited_lines,
-                fromfile=relative_path,
-                tofile=relative_path,
-            )
-        )
-        diffs[relative_path] = diff_text
+    diffs = live_diffs(project_root, pull_request_id, file_paths)
     connection.execute(
         "UPDATE revisions SET diffs_json=? WHERE id=?",
         (json.dumps(diffs), revision[0]),
@@ -117,28 +141,53 @@ def _readlines_or_empty(path):
         return []
 
 
+def cleanup_shadows(project_root, pull_request_id):
+    """Remove .bob-pr/tmp/<id>/ entirely — shadow copies and manifest.
+
+    Called after a full apply or a close so shadow copies never
+    accumulate.
+    """
+    shutil.rmtree(
+        _shadow_dir(project_root, pull_request_id), ignore_errors=True
+    )
+
+
 def apply_pr(connection, pull_request_id, project_root):
     """Install shadow copies over the real files, atomically.
 
     Drives off the latest revision's file list — the same list the reviewer
     approved — so the applied change always matches the reviewed diff.
+    Returns None when the PR does not exist or is terminal (applied or
+    closed) — a terminal PR is a record, not a work item.
     For each planned file: skip when the real file's sha256 differs from the
     snapshot manifest (the user edited it during review → 'stale'), or when
-    no snapshot hash exists to verify against. Otherwise write the copy to
-    <path>.bobtmp and os.replace it into place so the swap cannot leave a
-    half-written file. Records an 'applied' event.
+    no snapshot hash exists to verify against. A planned file with no shadow
+    copy is reported as 'missing' — never silently skipped. Otherwise write
+    the copy to <path>.bobtmp and os.replace it into place so the swap
+    cannot leave a half-written file. Records an 'applied' event.
 
-    Returns {"applied": [...], "stale": [...]}.
+    Once every planned file lands, the shadow dir is removed. When files
+    are stale or missing the dir stays so the agent can retry.
+
+    Returns {"applied": [...], "stale": [...], "missing": [...]}, or
+    None when refused.
     """
+    row = connection.execute(
+        "SELECT status FROM prs WHERE id=?", (pull_request_id,)
+    ).fetchone()
+    if row is None or row[0] in TERMINAL_STATUSES:
+        return None
+    compute_diffs(connection, pull_request_id, project_root)
     revision = latest_revision(connection, pull_request_id)
     file_paths = json.loads(revision[3]) if revision else []
     manifest = _read_manifest(project_root, pull_request_id)
     shadow_root = _shadow_dir(project_root, pull_request_id)
-    applied, stale = [], []
+    applied, stale, missing = [], [], []
     for relative_path in file_paths:
         real_path = os.path.join(project_root, relative_path)
         shadow_path = os.path.join(shadow_root, relative_path)
         if not os.path.exists(shadow_path):
+            missing.append(relative_path)
             continue
         recorded_hash = manifest.get(relative_path, {}).get("sha256")
         if os.path.exists(real_path) and (
@@ -152,20 +201,21 @@ def apply_pr(connection, pull_request_id, project_root):
         shutil.copy2(shadow_path, temp_path)
         os.replace(temp_path, real_path)
         applied.append(relative_path)
-    if applied and not stale:
+    if applied and not stale and not missing:
         connection.execute(
             "UPDATE prs SET status='applied' WHERE id=?",
             (pull_request_id,),
         )
+        cleanup_shadows(project_root, pull_request_id)
     connection.execute(
         "INSERT INTO events (pr_id, revision_id, kind, body, created_at) "
         "VALUES (?, ?, 'applied', ?, ?)",
         (
             pull_request_id,
             (latest_revision(connection, pull_request_id) or (None,))[0],
-            f"applied={applied} stale={stale}",
+            f"applied={applied} stale={stale} missing={missing}",
             utc_now(),
         ),
     )
     connection.commit()
-    return {"applied": applied, "stale": stale}
+    return {"applied": applied, "stale": stale, "missing": missing}

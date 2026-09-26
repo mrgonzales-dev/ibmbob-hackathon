@@ -14,14 +14,16 @@ def record_decision(connection, pull_request_id, kind, body):
 
     kind is 'approve' or 'request_changes'. The event is stamped with the
     latest revision id and prs.status flips to 'approved' or
-    'changes_requested'.
+    'changes_requested'. A PR id that does not exist, a terminal PR
+    (applied or closed), or an already-approved PR is ignored — approval
+    is idempotent; only 'applied' flips to the terminal record.
     """
     if kind not in ("approve", "request_changes"):
         raise ValueError(f"unknown decision kind: {kind}")
     current = connection.execute(
         "SELECT status FROM prs WHERE id=?", (pull_request_id,)
     ).fetchone()
-    if current and current[0] == "applied":
+    if current is None or current[0] in ("applied", "closed", "approved"):
         return
     revision = latest_revision(connection, pull_request_id)
     revision_id = revision[0] if revision else None
@@ -41,8 +43,14 @@ def get_decision(connection, pull_request_id):
     """Return (verdict, comments) for the latest revision of a PR.
 
     verdict is 'APPROVED', 'CHANGES_REQUESTED', or 'PENDING'. comments is the
-    list of non-empty bodies on decision events for that revision.
+    list of non-empty bodies on decision events for that revision. A PR id
+    that does not exist gives 'UNKNOWN'.
     """
+    exists = connection.execute(
+        "SELECT 1 FROM prs WHERE id=?", (pull_request_id,)
+    ).fetchone()
+    if exists is None:
+        return "UNKNOWN", []
     revision = latest_revision(connection, pull_request_id)
     if not revision:
         return "PENDING", []
@@ -56,3 +64,29 @@ def get_decision(connection, pull_request_id):
     verdict = KIND_TO_VERDICT[rows[-1][0]]
     comments = [body for _, body in rows if body]
     return verdict, comments
+
+
+def post_comment(connection, pull_request_id, body):
+    """Insert a 'comment' event on the PR's latest revision.
+
+    Agent notes for the timeline. Comments never move the verdict.
+    Returns False when the PR does not exist.
+    """
+    exists = connection.execute(
+        "SELECT 1 FROM prs WHERE id=?", (pull_request_id,)
+    ).fetchone()
+    if exists is None:
+        return False
+    revision = latest_revision(connection, pull_request_id)
+    connection.execute(
+        "INSERT INTO events (pr_id, revision_id, kind, body, created_at) "
+        "VALUES (?, ?, 'comment', ?, ?)",
+        (
+            pull_request_id,
+            revision[0] if revision else None,
+            body or "",
+            utc_now(),
+        ),
+    )
+    connection.commit()
+    return True
