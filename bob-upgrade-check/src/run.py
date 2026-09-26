@@ -108,7 +108,7 @@ def main(argv=None):
     parser.add_argument(
         "command", nargs="?", default=SKILL_NAME, help="the skill name to run"
     )
-    parser.add_argument("target", nargs="*", help="ignored; kept for skill activation")
+    parser.add_argument("target", nargs="*", help="upgrade target, e.g. 'laravel 12'; passed to Bob Shell on --ai")
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     parser.add_argument(
         "--no-color", action="store_true", help="plain text even on a color terminal"
