@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bobdevkit" / "bob-upgrade-check" / "src"))
 
 from run import (
     DataError,
@@ -21,8 +21,8 @@ from run import (
     resolve_skill,
 )
 
-ROOT = Path(__file__).resolve().parents[3]
-SRC = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+SRC = Path(__file__).resolve().parents[2] / "bobdevkit" / "bob-upgrade-check" / "src"
 
 
 class RunnerCase(unittest.TestCase):

@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "bobdevkit" / "bob-upgrade-check" / "src"))
 
 from laravel12 import (
     analyze,
@@ -16,7 +16,7 @@ from laravel12 import (
     severity_rank,
 )
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class ProjectCase(unittest.TestCase):

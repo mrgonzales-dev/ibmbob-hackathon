@@ -13,7 +13,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent
+SRC = Path(__file__).resolve().parents[2] / "bobdevkit" / "bob-impact" / "src"
 sys.path.insert(0, str(SRC))
 
 from impact import (
@@ -26,7 +26,7 @@ from impact import (
 )
 
 
-SAMPLE_ROOT = Path(__file__).resolve().parents[3] / "sample-app"
+SAMPLE_ROOT = Path(__file__).resolve().parents[2] / "sample-app"
 
 
 class ProjectCase(unittest.TestCase):

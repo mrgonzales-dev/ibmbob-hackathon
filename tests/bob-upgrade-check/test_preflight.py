@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SRC = Path(__file__).resolve().parent.parent
+SRC = Path(__file__).resolve().parents[2] / "bobdevkit" / "bob-upgrade-check" / "src"
 sys.path.insert(0, str(SRC))
 
 import preflight

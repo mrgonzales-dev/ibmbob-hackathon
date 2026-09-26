@@ -1,5 +1,5 @@
-# Run from the repo root:  python3 bob-pr/src/test_bob_pr.py
-"""Tests for bob_pr.py. Run: python3 test_bob_pr.py (from src/, or python3 -m unittest)."""
+# Run from the repo root:  python3 tests/bob-pr/test_bob_pr.py
+"""Tests for bob_pr.py. Run: python3 tests/bob-pr/test_bob_pr.py from the repo root."""
 
 import contextlib
 import hashlib
@@ -15,7 +15,9 @@ import unittest
 import urllib.request
 import threading
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "..", "..", "bobdevkit", "bob-pr", "src"))
 import bob_pr
 
 
