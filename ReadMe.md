@@ -38,6 +38,7 @@ project copy wins over the global copy.
 | `bob-upgrade-check` | `bob-upgrade-check` | Major framework upgrade risk analyzer. Scans a PHP project for the package, code, and config changes a version bump causes. Returns one ranked HIGH/MED/LOW report and an optional phased plan. |
 | `bob-impact` | `bob-impact` | Change impact analyzer. Reads `git diff`, traces the direct callers, database tables, and tests that reference the changed code. Prints one ranked blast-radius report. Add `--regress` to run the affected tests. |
 | `bob-pr` | `bob-pr` | Serves a plan as a GitHub-style pull-request page on localhost. You approve or request changes before any real project file is touched. |
+| `bob-install` | `bob-install` | Bootstrap installer. Detects which AI agent config dir the project uses and copies the three skills into it. Agent-agnostic. |
 
 ### Skill structure
 
@@ -65,6 +66,7 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 | `bob-upgrade-check/` | The upgrade risk analyzer skill. |
 | `bob-impact/` | The change impact analyzer skill. |
 | `bob-pr/` | The plan-as-PR review gate skill. |
+| `bob-install/` | The bootstrap installer skill. Detects the agent config dir and copies the three skills. |
 | `bob-devkit-landing-page/` | Vue 3 + Vite landing page for the demo. |
 | `AGENTS.md` | The agent rules: toolkit, workflow, skill structure, commit rules, and the ASD-STE100 communication standard. |
 

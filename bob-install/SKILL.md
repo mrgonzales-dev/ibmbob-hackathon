@@ -53,7 +53,7 @@ agent they use and whether to create the config dir.
 ## Phase 2 — Copy
 
 For each detected agent, copy the three skill folders into its skills dir.
-The source root is the directory that holds this `SKILL.md` (the repo
+The source root is the parent of this `bob-install/` folder (the repo
 root). Run the copy commands from there.
 Replace `<config-dir>` with the agent's config dir from the table above.
 Skip `__pycache__/` and `*.pyc` files.
