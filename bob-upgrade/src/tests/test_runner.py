@@ -21,7 +21,7 @@ from run import (
     resolve_skill,
 )
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 SRC = Path(__file__).resolve().parents[1]
 
 

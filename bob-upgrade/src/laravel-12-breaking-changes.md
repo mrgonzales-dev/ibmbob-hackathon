@@ -32,15 +32,15 @@ in the guide or in this file.
 | ID | Change | Impact | Detect signal | Fix |
 |---|---|---|---|---|
 | API-001 | The `HasVersion7Uuids` trait was removed | Medium | `HasVersion7Uuids` appears in any file | Replace it with `HasUuids`. |
-| API-002 | `HasUuids` now returns UUID version 7 | Medium | `HasUuids` appears in any file | Use `HasVersion4Uuids` to keep version 4 identifiers. |
+| API-002 | `HasUuids` now returns UUID version 7 | Medium | `HasUuids` appears with no `HasVersion4Uuids` on the same line | Use `HasVersion4Uuids` to keep version 4 identifiers. |
 
 ## Container, concurrency, and authentication
 
 | ID | Change | Impact | Detect signal | Fix |
 |---|---|---|---|---|
-| API-005 | `Concurrency::run` now returns results under their array keys | Low | `Concurrency::run(` with an array argument | Read results by key. Remove any index assumption. |
+| API-005 | `Concurrency::run` now returns results under their array keys | Low | `Concurrency::run(` with a list destructure on the same line | Read results by key. Remove any index assumption. |
 | API-006 | The container uses default class property values on resolve | Low | `resolve(` with a class argument | Accept the new default. Adjust code that assumed no default. |
-| API-004 | `DatabaseTokenRepository` reads `$expires` in seconds | Very Low | `DatabaseTokenRepository` appears in any file | Multiply minutes by 60. |
+| API-004 | `DatabaseTokenRepository` reads `$expires` in seconds | Very Low | `DatabaseTokenRepository` appears outside an import with no `* 60` on the same line | Multiply minutes by 60. |
 
 ## Request and validation changes
 
@@ -60,9 +60,9 @@ in the guide or in this file.
 
 | ID | Change | Impact | Detect signal | Fix |
 |---|---|---|---|---|
-| DB-001 | `getTables`, `getViews`, and `getTypes` span all schemas | Low | `getTables(`, `getViews(`, or `getTypes(` appears | Pass the `schema` argument to limit results. |
-| DB-002 | `getTableListing` returns schema-qualified names | Low | `getTableListing(` appears | Pass `schemaQualified: false` to keep short names. |
-| DB-003 | The `Blueprint` constructor requires a `Connection` | Very Low | `new Blueprint(` appears | Pass the connection as the first argument. |
+| DB-001 | `getTables`, `getViews`, and `getTypes` span all schemas | Low | `getTables()`, `getViews()`, or `getTypes()` with no argument appears | Pass the `schema` argument to limit results. |
+| DB-002 | `getTableListing` returns schema-qualified names | Low | `getTableListing(` with no `schemaQualified` argument appears | Pass `schemaQualified: false` to keep short names. |
+| DB-003 | The `Blueprint` constructor requires a `Connection` | Very Low | `new Blueprint(` with one argument appears | Pass the connection as the first argument. |
 | DB-004 | `Grammar::setConnection` was removed | Very Low | `setConnection(` appears on a grammar object | Pass the connection to the constructor. |
 | DB-005 | `Blueprint::getPrefix` is deprecated | Very Low | `getPrefix(` appears | Read the prefix from the connection. |
 | DB-006 | `Connection::withTablePrefix` was removed | Very Low | `withTablePrefix(` appears | Read the prefix from the connection. |

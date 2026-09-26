@@ -6,7 +6,7 @@ from pathlib import Path
 
 SEVERITIES = {"HIGH": 3, "MED": 2, "LOW": 1}
 TARGET = "Laravel 12"
-SKIP_DIRS = {"vendor", "node_modules", "storage", ".git", "dist", "build", "cache"}
+SKIP_DIRS = {"vendor", "node_modules", "storage", ".git", "dist", "build", "cache", ".bob-pr", ".bob"}
 MAX_BYTES = 2_000_000
 
 PACKAGE_RULES = [
@@ -58,14 +58,16 @@ CODE_RULES = [
     },
     {
         "id": "API-002",
-        "pattern": r"\bHasUuids\b",
+        # The alias line holds both names, so skip lines with the fix.
+        "pattern": r"^(?!.*HasVersion4Uuids).*\bHasUuids\b",
         "severity": "MED",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Use HasVersion4Uuids to keep version 4 identifiers.",
     },
     {
         "id": "API-005",
-        "pattern": r"Concurrency::run\s*\(",
+        # Only a list destructure assumes order, so only it fires.
+        "pattern": r"(?:^\s*\[|list\s*\().*Concurrency::run\s*\(",
         "severity": "LOW",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Read each result under its own array key.",
@@ -79,7 +81,8 @@ CODE_RULES = [
     },
     {
         "id": "API-004",
-        "pattern": r"\bDatabaseTokenRepository\b",
+        # Imports never set a lifetime, so skip use lines and * 60 fixes.
+        "pattern": r"^(?!\s*use\s)(?!.*\*\s*60).*\bDatabaseTokenRepository\b",
         "severity": "LOW",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Multiply the token lifetime in minutes by 60.",
@@ -93,21 +96,24 @@ CODE_RULES = [
     },
     {
         "id": "DB-001",
-        "pattern": r"\bget(Tables|Views|Types)\s*\(",
+        # A schema argument limits results, so only empty calls fire.
+        "pattern": r"\bget(Tables|Views|Types)\s*\(\s*\)",
         "severity": "LOW",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Pass the schema argument to keep one schema.",
     },
     {
         "id": "DB-002",
-        "pattern": r"\bgetTableListing\s*\(",
+        # The flag keeps short names, so skip lines with the flag.
+        "pattern": r"\bgetTableListing\s*\((?![^)]*schemaQualified)",
         "severity": "LOW",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Pass schemaQualified: false.",
     },
     {
         "id": "DB-003",
-        "pattern": r"new\s+Blueprint\s*\(",
+        # Two arguments hold the connection, so only one argument fires.
+        "pattern": r"new\s+Blueprint\s*\((?![^)]*,)",
         "severity": "LOW",
         "source": "https://laravel.com/docs/12.x/upgrade",
         "fix": "Pass the connection as the first argument.",

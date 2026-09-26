@@ -5,7 +5,7 @@ from pathlib import Path
 
 COMPOSER_JSON = "composer.json"
 COMPOSER_LOCK = "composer.lock"
-SKIP_DIRS = {"vendor", "node_modules", "storage", ".git", "bootstrap"}
+SKIP_DIRS = {"vendor", "node_modules", "storage", ".git", "dist", "build", "cache", ".bob-pr", ".bob"}
 FRAMEWORK_PACKAGES = (
     "laravel/framework",
     "symfony/framework-bundle",
