@@ -22,10 +22,10 @@
 > A terminal-native AI developer toolkit that understands your entire codebase
 > and helps you build, debug, review, and maintain it.
 
-We build at the repository root. Each skill lives in its own folder at this
-root. On install, a root skill folder maps to `<agent-config>/skills/<name>/`
-in a project. Git tracks every file, so every command ships as a skill
-a teammate gets on clone.
+We build at the repository root. All skills ship inside the `bobdevkit/`
+package folder. On install, a skill folder maps to
+`<agent-config>/skills/<name>/` in a project. Git tracks every file, so
+every command ships as a skill a teammate gets on clone.
 
 A **skill** is one user-facing command. The user types it, or a model activates
 it from its description. Skills are agent-agnostic — any AI agent that reads
@@ -36,7 +36,7 @@ a `SKILL.md` from its skills directory can use them.
 | `bob-upgrade-check` | Ranked upgrade risk report. Scans deps, APIs, and config. Merges into one HIGH/MED/LOW table. |
 | `bob-impact` | Change impact (blast radius) report. Traces callers, tables, and tests from git diff. |
 | `bob-pr` | Plan-as-PR review gate. Serves a plan on localhost. Waits for approve or request-changes before any file is touched. |
-| `bob-install` | Bootstrap installer. Copies all three skills into the agent config dir the project uses. |
+| `bobdevkit` | The package and installer. Holds all three skills and copies them into the agent config dir the project uses. |
 
 The lanes inside each skill are internal steps, not separate commands.
 The `bob-upgrade-check` scanner runs all three lanes (`deps`, `apis`, `config`)
@@ -81,21 +81,27 @@ so one skill is one folder:
 
 ## Skill Structure
 
-Every skill lives in its own directory at the repository root and must
-contain a `SKILL.md`.
+Every skill lives in its own directory inside `bobdevkit/` and must
+contain a `SKILL.md`. The `bobdevkit/SKILL.md` at the package root is the
+global installer skill — it instructs the agent to copy the three skill
+folders into the project's agent config dir.
 
 ```
-<repo root>            # root skill folders install into .bob/skills/
-  <skill-name>/
-    SKILL.md          # required: frontmatter + instructions
-    src/              # required: all scripts and data the skill needs
-  agents/<persona>.md # optional: one role for a subagent
-  commands/<name>.md  # optional: a slash command
+<repo root>
+  bobdevkit/          # the skill package
+    SKILL.md          # global installer: frontmatter + copy instructions
+    <skill-name>/
+      SKILL.md          # required: frontmatter + instructions
+      src/              # required: all scripts and data the skill needs
+      agents/<persona>.md # optional: one role for a subagent
+      commands/<name>.md  # optional: a slash command
+  tests/              # test suites, kept outside the shipped package
+    <skill-name>/
 ```
 
-Bob Shell reads `.bob/skills/` at the project root, and each root skill
-folder installs into that directory. Git tracks the root, so a teammate
-receives every command on clone. Do not put a hackathon skill in
+Bob Shell reads `.bob/skills/` at the project root, and each skill folder
+in `bobdevkit/` installs into that directory. Git tracks the package, so a
+teammate receives every command on clone. Do not put a hackathon skill in
 `.opencode/`. That directory holds throwaway third-party skills and is
 ignored.
 

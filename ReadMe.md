@@ -29,29 +29,31 @@ after you approve it.
 
 ## Skills
 
-Each skill is one folder at the repo root. Install a skill by copying its
-folder to `~/.bob/skills/` (global) or `.bob/skills/` (per project). A
-project copy wins over the global copy.
+All skills ship inside the `bobdevkit/` package folder. Install a skill by
+copying its folder to `~/.bob/skills/` (global) or `.bob/skills/` (per
+project). A project copy wins over the global copy.
 
 | Skill | Command | What it does |
 |---|---|---|
 | `bob-upgrade-check` | `bob-upgrade-check` | Major framework upgrade risk analyzer. Scans a PHP project for the package, code, and config changes a version bump causes. Returns one ranked HIGH/MED/LOW report and an optional phased plan. |
 | `bob-impact` | `bob-impact` | Change impact analyzer. Reads `git diff`, traces the direct callers, database tables, and tests that reference the changed code. Prints one ranked blast-radius report. Add `--regress` to run the affected tests. |
 | `bob-pr` | `bob-pr` | Serves a plan as a GitHub-style pull-request page on localhost. You approve or request changes before any real project file is touched. |
-| `bob-install` | `bob-install` | Bootstrap installer. Detects which AI agent config dir the project uses and copies the three skills into it. Agent-agnostic. |
+| `bobdevkit` | `bobdevkit` | The package and installer. Holds all three skills. Its `SKILL.md` detects which AI agent config dir the project uses and copies the skills into it. Agent-agnostic. |
 
 ### Skill structure
 
 ```
-<repo root>            # root skill folders install into .bob/skills/
-  <skill-name>/
-    SKILL.md          # required: frontmatter + instructions
-    src/              # required: all scripts and data the skill needs
-      run.py          # the command: local scan, optional --ai to Bob Shell
-      <scanner>.py    # the local rule engine
-      *.md            # the rule reference and the report template
-      requirements.txt
-      tests/
+<repo root>
+  bobdevkit/          # the skill package: installer SKILL.md + the skills
+    <skill-name>/
+      SKILL.md          # required: frontmatter + instructions
+      src/              # required: all scripts and data the skill needs
+        run.py          # the command: local scan, optional --ai to Bob Shell
+        <scanner>.py    # the local rule engine
+        *.md            # the rule reference and the report template
+        requirements.txt
+  tests/              # test suites, kept outside the shipped package
+    <skill-name>/
 ```
 
 A skill is model-agnostic markdown. The local scanner needs no API key and
@@ -63,10 +65,10 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 
 | Path | Purpose |
 |---|---|
-| `bob-upgrade-check/` | The upgrade risk analyzer skill. |
-| `bob-impact/` | The change impact analyzer skill. |
-| `bob-pr/` | The plan-as-PR review gate skill. |
-| `bob-install/` | The bootstrap installer skill. Detects the agent config dir and copies the three skills. |
+| `bobdevkit/` | The skill package: global installer `SKILL.md` plus the three skill folders. |
+| `bobdevkit/bob-upgrade-check/` | The upgrade risk analyzer skill. |
+| `bobdevkit/bob-impact/` | The change impact analyzer skill. |
+| `bobdevkit/bob-pr/` | The plan-as-PR review gate skill. |
 | `bob-devkit-landing-page/` | Vue 3 + Vite landing page for the demo. |
 | `AGENTS.md` | The agent rules: toolkit, workflow, skill structure, commit rules, and the ASD-STE100 communication standard. |
 
@@ -81,19 +83,19 @@ git clone https://github.com/mrgonzales-dev/ibmbob-hackathon.git
 cd ibmbob-hackathon
 ```
 
-All three skills are already under the repo root. Copy the ones you need to
+All three skills sit inside `bobdevkit/`. Copy the ones you need to
 `~/.bob/skills/` so Bob finds them in every project:
 
 ```shell
 # macOS / Linux
-cp -r bob-upgrade-check ~/.bob/skills/
-cp -r bob-impact        ~/.bob/skills/
-cp -r bob-pr            ~/.bob/skills/
+cp -r bobdevkit/bob-upgrade-check ~/.bob/skills/
+cp -r bobdevkit/bob-impact        ~/.bob/skills/
+cp -r bobdevkit/bob-pr            ~/.bob/skills/
 
 # Windows PowerShell
-Copy-Item -Recurse bob-upgrade-check $HOME\.bob\skills\
-Copy-Item -Recurse bob-impact        $HOME\.bob\skills\
-Copy-Item -Recurse bob-pr            $HOME\.bob\skills\
+Copy-Item -Recurse bobdevkit\bob-upgrade-check $HOME\.bob\skills\
+Copy-Item -Recurse bobdevkit\bob-impact        $HOME\.bob\skills\
+Copy-Item -Recurse bobdevkit\bob-pr            $HOME\.bob\skills\
 ```
 
 ### Option B — Download one skill without cloning
@@ -103,13 +105,13 @@ Use `npx degit` to pull a single skill folder straight into your project's
 
 ```shell
 # upgrade risk analyzer
-npx degit mrgonzales-dev/ibmbob-hackathon/bob-upgrade-check .bob/skills/bob-upgrade-check
+npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-upgrade-check .bob/skills/bob-upgrade-check
 
 # change impact analyzer
-npx degit mrgonzales-dev/ibmbob-hackathon/bob-impact .bob/skills/bob-impact
+npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-impact .bob/skills/bob-impact
 
 # plan-as-PR review gate
-npx degit mrgonzales-dev/ibmbob-hackathon/bob-pr .bob/skills/bob-pr
+npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-pr .bob/skills/bob-pr
 ```
 
 `npx degit` requires Node.js 16 or later. It downloads the folder contents
@@ -122,7 +124,7 @@ Cursor, Devin, etc.). The agent runs all three `npx degit` commands, reads
 each downloaded `SKILL.md`, and immediately follows its instructions. No
 manual copy step needed.
 
-> Run `npx degit mrgonzales-dev/ibmbob-hackathon/bob-upgrade-check .bob/skills/bob-upgrade-check` then `npx degit mrgonzales-dev/ibmbob-hackathon/bob-impact .bob/skills/bob-impact` then `npx degit mrgonzales-dev/ibmbob-hackathon/bob-pr .bob/skills/bob-pr` and follow the generated skill instructions for all three now. Read the complete output of each, redirecting to a temporary file first if necessary. Resolve relative paths from the supporting-files directory each skill provides.
+> Run `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-upgrade-check .bob/skills/bob-upgrade-check` then `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-impact .bob/skills/bob-impact` then `npx degit mrgonzales-dev/ibmbob-hackathon/bobdevkit/bob-pr .bob/skills/bob-pr` and follow the generated skill instructions for all three now. Read the complete output of each, redirecting to a temporary file first if necessary. Resolve relative paths from the supporting-files directory each skill provides.
 
 ### Run the landing page
 
