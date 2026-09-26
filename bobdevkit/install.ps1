@@ -43,6 +43,62 @@ function Write-Banner {
 function Write-Step { param([string]$Msg) Write-Host $Msg -ForegroundColor DarkGray }
 function Write-Ok   { param([string]$Msg) Write-Host "✓ $Msg" -ForegroundColor Green }
 
+# --- mini TUI: arrow-key menus ---------------------------------------------
+# True when a real console is attached (input not redirected).
+$ConsoleOK = [Environment]::UserInteractive -and
+             -not [Console]::IsInputRedirected -and
+             -not [Console]::IsOutputRedirected
+
+function Show-Menu {
+    param([string]$Prompt, [string[]]$Options, [switch]$Multi)
+    $n = $Options.Count
+    $sel = 0
+    $checked = @($false) * $n
+    if ($Multi) { $checked = @($true) * $n }
+
+    Write-Host ("? " + $Prompt) -ForegroundColor Blue
+    $top = [Console]::CursorTop
+    $width = [Console]::BufferWidth - 1
+
+    function Draw {
+        for ($i = 0; $i -lt $n; $i++) {
+            [Console]::SetCursorPosition(0, $top + $i)
+            $pre = ""
+            if ($Multi) { $pre = if ($checked[$i]) { "[x] " } else { "[ ] " } }
+            $line = if ($i -eq $sel) { "❯ $pre$($Options[$i])" } else { "  $pre$($Options[$i])" }
+            $line = $line.PadRight([Math]::Min($width, 200))
+            if ($i -eq $sel) {
+                Write-Host $line -ForegroundColor Cyan -NoNewline
+            } else {
+                Write-Host $line -NoNewline
+            }
+        }
+    }
+
+    try { [Console]::CursorVisible = $false } catch {}
+    Draw
+    try {
+        while ($true) {
+            $k = [Console]::ReadKey($true)
+            switch ($k.Key) {
+                "UpArrow"   { $sel = ($sel + $n - 1) % $n }
+                "DownArrow" { $sel = ($sel + 1) % $n }
+                "Spacebar"  { if ($Multi) { $checked[$sel] = -not $checked[$sel] } }
+                "Enter" {
+                    if (-not $Multi) { $checked[$sel] = $true }
+                    [Console]::SetCursorPosition(0, $top + $n)
+                    return @(for ($i = 0; $i -lt $n; $i++) { if ($checked[$i]) { $i } })
+                }
+                "Escape" { Write-Host ""; exit 130 }
+                default  { if ($k.KeyChar -eq "q" -or $k.KeyChar -eq "Q") { Write-Host ""; exit 130 } }
+            }
+            Draw
+        }
+    } finally {
+        try { [Console]::CursorVisible = $true } catch {}
+    }
+}
+
 function Get-AgentDir {
     param([string]$Name, [string]$Scope)
     switch ("$Name`:$Scope") {
@@ -81,23 +137,10 @@ if ($ScriptDir -and (Test-Path "$ScriptDir\bob-pr\SKILL.md")) {
 
 # --- pick the skills -------------------------------------------------------
 $Skills = $AllSkills
-if (-not $Yes -and -not $Uninstall -and [Environment]::UserInteractive) {
-    Write-Host "? which skills? (numbers, space/comma separated — Enter for all)" -ForegroundColor Blue
-    for ($i = 0; $i -lt $AllSkills.Count; $i++) {
-        Write-Host ("  {0}) {1}" -f ($i + 1), $AllSkills[$i]) -ForegroundColor Magenta
-    }
-    $answer = Read-Host ">"
-    if ($answer) {
-        $picked = @()
-        foreach ($n in ($answer -split '[,\s]+' | Where-Object { $_ })) {
-            $idx = 0
-            if ([int]::TryParse($n, [ref]$idx) -and $idx -ge 1 -and $idx -le $AllSkills.Count) {
-                $picked += $AllSkills[$idx - 1]
-            }
-        }
-        if ($picked.Count -eq 0) { Write-Host "no skills picked — nothing to do"; exit 0 }
-        $Skills = $picked
-    }
+if (-not $Yes -and -not $Uninstall -and $ConsoleOK) {
+    $picked = Show-Menu "which skills? (space to toggle, enter to confirm)" $AllSkills -Multi
+    $Skills = @($picked | ForEach-Object { $AllSkills[$_] })
+    if ($Skills.Count -eq 0) { Write-Host "no skills picked — nothing to do"; exit 0 }
 }
 
 foreach ($s in $Skills) {
@@ -126,15 +169,11 @@ if ($Dir) {
     if ($found.Count -gt 0) {
         Write-Step "detecting agent environments…"
         Write-Step ("  found: " + ($found -join ","))
-        if (-not $Yes -and [Environment]::UserInteractive) {
-            Write-Host "? install into which? (number — Enter for all detected)" -ForegroundColor Blue
-            for ($i = 0; $i -lt $Targets.Count; $i++) {
-                Write-Host ("  {0}) {1}" -f ($i + 1), $Targets[$i]) -ForegroundColor Magenta
-            }
-            $answer = Read-Host ">"
-            if ($answer -and [int]::TryParse($answer, [ref]($idx = 0)) -and
-                $idx -ge 1 -and $idx -le $Targets.Count) {
-                $Targets = @($Targets[$idx - 1])
+        if (-not $Yes -and $ConsoleOK) {
+            $opts = @($Targets) + "all of the above"
+            $idx = Show-Menu "install into which? (enter to pick)" $opts
+            if ($idx[0] -lt $Targets.Count) {
+                $Targets = @($Targets[$idx[0]])
             }
         }
     } else {
