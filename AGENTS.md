@@ -23,36 +23,47 @@
 > and helps you build, debug, review, and maintain it.
 
 We build at the repository root. Each skill lives in its own folder at this
-root. On install, a root skill folder maps to `.bob/skills/<name>/` in a
-project or in `~/`. Git tracks every file, so every command ships as a skill
+root. On install, a root skill folder maps to `<agent-config>/skills/<name>/`
+in a project. Git tracks every file, so every command ships as a skill
 a teammate gets on clone.
 
 A **skill** is one user-facing command. The user types it, or a model activates
-it from its description.
+it from its description. Skills are agent-agnostic — any AI agent that reads
+a `SKILL.md` from its skills directory can use them.
 
 | Command | Purpose |
 |---|---|
-| `bob-upgrade-check` | Ranked upgrade risk report. Runs every lane and merges them. |
+| `bob-upgrade-check` | Ranked upgrade risk report. Scans deps, APIs, and config. Merges into one HIGH/MED/LOW table. |
+| `bob-impact` | Change impact (blast radius) report. Traces callers, tables, and tests from git diff. |
+| `bob-pr` | Plan-as-PR review gate. Serves a plan on localhost. Waits for approve or request-changes before any file is touched. |
+| `bob-install` | Bootstrap installer. Copies all three skills into the agent config dir the project uses. |
 
-One command covers the whole workflow. The lanes are internal steps, not
-separate commands. The `deps`, `apis`, and `config` lanes read different parts
-of the project, then merge into one ranked list. The local scanner runs all
-three in one pass and needs no thread pool, because the whole scan takes about
-13 ms on the 18-file sample app. On the `--ai` path the agent gives each lane
-its own `explore` subagent. Never copy the rule table into a second file. Link
+The lanes inside each skill are internal steps, not separate commands.
+The `bob-upgrade-check` scanner runs all three lanes (`deps`, `apis`, `config`)
+in one pass and needs no thread pool. The whole scan takes about 13 ms on the
+18-file sample app. On the `--ai` path the agent gives each lane its own
+`explore` subagent. Never copy the rule table into a second file. Link
 the shared reference.
 
-Bob reads skills from `<project>/.bob/skills/` and from `~/.bob/skills/`.
-Copy a root skill folder to `~/.bob/skills/` so it works in every project.
-A project copy wins over the global copy.
+Each AI agent reads skills from its own config directory:
+
+| Agent | Project skills dir | Global skills dir |
+|---|---|---|
+| IBM Bob | `.bob/skills/` | `~/.bob/skills/` |
+| Devin | `.devin/skills/` | — |
+| Claude Code | `.claude/skills/` | — |
+| Cursor | `.cursor/skills/` | — |
+
+A project copy wins over the global copy. For agents not listed above,
+check their documentation for the correct skills directory.
 
 Each skill is self-contained. A skill folder holds everything that skill needs,
 so one skill is one folder:
 
 ```
-bob-upgrade-check/
+<skill-name>/
   SKILL.md          # required: frontmatter + instructions
-  src/
+  src/              # required: all scripts and data the skill needs
     run.py          # the command: local scan, optional --ai to Bob Shell
     <scanner>.py    # the local rule engine
     *.md            # the rule reference and the report template
@@ -62,13 +73,11 @@ bob-upgrade-check/
 
 ### Our workflow
 
-<!-- one-line: which workflow we are improving and the pain point -->
-
-- Workflow: Dependency upgrade analysis before a major framework version bump.
-- Pain today: Developers read changelogs and check packages by hand. The work takes hours.
-- Errors reach production. A missed package causes a broken deploy.
-- Solution: Bob scans the whole project against a committed rule table. It prints a ranked risk report. After you approve the report, the agent prints the upgrade plan.
-- Impact: A Laravel 11 to 12 upgrade analyzed in 13 ms on the 18-file sample app. The manual work takes two to four hours.
+| Workflow | Pain today | Solution | Impact |
+|---|---|---|---|
+| Dependency upgrade before a major version bump | Developers read changelogs and check packages by hand. The work takes two to four hours. A missed package causes a broken deploy. | `bob-upgrade-check` scans the whole project against a committed rule table. It prints one ranked HIGH/MED/LOW report. After you approve, the agent writes the upgrade plan. | A Laravel 11 → 12 upgrade analyzed in 13 ms on the 18-file sample app. |
+| Change impact before a merge | Developers grep callers by hand and miss tests and tables. A change ships blind. | `bob-impact` traces the changed files to direct callers, database tables, and tests. It prints one ranked blast-radius report. | The blast radius is visible before the merge, not after the deploy breaks. |
+| Plan review before code | A plan goes straight to code. The reviewer sees the change too late. | `bob-pr` serves the plan as a localhost pull-request page. You approve or request changes before any real file is touched. | Bad plans stop at the plan, not at the broken build. |
 
 ## Skill Structure
 
