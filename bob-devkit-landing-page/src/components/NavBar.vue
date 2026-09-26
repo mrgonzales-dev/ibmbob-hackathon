@@ -1,11 +1,10 @@
 <template>
   <header class="nav">
-    <a class="logo" href="#top">Bob<span>devkit</span></a>
+    <a class="logo" href="#top"><img class="mark" src="/mascot.png" alt="Bob devkit mascot" />Bob<span>devkit</span></a>
     <nav class="links">
       <a href="#demo">demo</a>
       <a href="#install">install</a>
       <a href="#skills">skills</a>
-      <a href="#workflow">workflow</a>
       <a class="gh" href="https://github.com/mrgonzales-dev/ibmbob-hackathon">github</a>
     </nav>
   </header>
@@ -25,11 +24,22 @@
 }
 
 .logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-weight: 700;
   font-size: 18px;
   letter-spacing: 1px;
   color: var(--ink);
   text-decoration: none;
+}
+
+.logo .mark {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 2px solid var(--dim);
 }
 
 .logo span {

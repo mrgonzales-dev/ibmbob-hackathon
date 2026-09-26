@@ -57,7 +57,8 @@ function Show-Menu {
     if ($Multi) { $checked = @($true) * $n }
 
     Write-Host ("? " + $Prompt) -ForegroundColor Blue
-    $top = [Console]::CursorTop
+    # Clamp $top so the menu fits entirely within the current buffer height.
+    $top = [Math]::Max(0, [Math]::Min([Console]::CursorTop, [Console]::BufferHeight - $n - 1))
     $width = [Console]::BufferWidth - 1
 
     function Draw {

@@ -4,6 +4,7 @@ import TerminalDemo from './TerminalDemo.vue'
 
 <template>
   <section class="hero" id="top">
+    <img class="mascot reveal" src="/mascot.png" alt="Bob devkit mascot" />
     <h1 class="reveal">
       <span class="grad">BOB devkit</span>
     </h1>
@@ -12,7 +13,6 @@ import TerminalDemo from './TerminalDemo.vue'
     </p>
     <div class="cta-row reveal">
       <a class="btn primary" href="#skills">browse the skills</a>
-      <a class="btn" href="#workflow">how it works</a>
     </div>
     <div class="term-wrap reveal">
       <TerminalDemo />
@@ -26,6 +26,14 @@ import TerminalDemo from './TerminalDemo.vue'
   margin: 0 auto;
   padding: 96px 32px 80px;
   text-align: center;
+}
+
+.mascot {
+  width: clamp(140px, 22vw, 220px);
+  border-radius: 24px;
+  border: 3px solid var(--ink);
+  box-shadow: 8px 8px 0 var(--purple);
+  margin-bottom: 32px;
 }
 
 .sys {

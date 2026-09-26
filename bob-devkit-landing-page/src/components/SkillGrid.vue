@@ -1,22 +1,27 @@
 <script setup>
+const DOCS = '#/docs'
+
 const skills = [
   {
     num: '01',
     name: 'bob-pr',
     status: 'live',
     desc: 'Plans shipped as pull requests. Shadow copies become real diffs. You approve, it applies — atomically.',
+    doc: `${DOCS}/bob-pr`,
   },
   {
     num: '02',
     name: 'bob-upgrade-check',
     status: 'live',
     desc: 'Dependency and stack upgrades handled by the agent, gated by review.',
+    doc: `${DOCS}/bob-upgrade-check`,
   },
   {
     num: '03',
     name: 'bob-impact',
     status: 'live',
     desc: 'Blast radius before you merge. Traces callers, tables, and tests from git diff.',
+    doc: `${DOCS}/bob-impact`,
   },
 ]
 </script>
@@ -25,16 +30,20 @@ const skills = [
   <section class="skills" id="skills">
     <h2 class="reveal">the skills</h2>
     <div class="grid">
-      <article
+      <a
         v-for="s in skills"
         :key="s.name"
         class="card reveal"
         :data-status="s.status"
+        :href="s.doc"
+        target="_blank"
+        rel="noopener"
       >
         <p class="num">#{{ s.num }} <span class="status">[{{ s.status }}]</span></p>
         <h3>{{ s.name }}</h3>
         <p class="desc">{{ s.desc }}</p>
-      </article>
+        <span class="more">docs &#8594;</span>
+      </a>
     </div>
   </section>
 </template>
@@ -62,11 +71,14 @@ h2 {
 }
 
 .card {
+  display: block;
   border: 2px solid var(--ink);
   padding: 22px 20px;
   background: var(--panel);
   box-shadow: 6px 6px 0 var(--dim);
   transition: transform 200ms ease, box-shadow 200ms ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .card:hover {
@@ -94,9 +106,26 @@ h3 {
 }
 
 .desc {
-  margin: 0;
+  margin: 0 0 16px;
   font-size: 14px;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.more {
+  display: inline-block;
+  color: var(--blue);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 2px solid var(--dim);
+  padding: 3px 10px;
+  transition: color 150ms ease, border-color 150ms ease;
+}
+
+.card:hover .more {
+  color: var(--bg);
+  background: var(--blue);
+  border-color: var(--blue);
 }
 </style>

@@ -5,6 +5,9 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   plugins: [vue()],
   server: {
+    fs: {
+      allow: ['..'],
+    },
     watch: {
       usePolling: true,
     },

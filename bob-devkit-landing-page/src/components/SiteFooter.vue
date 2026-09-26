@@ -14,7 +14,6 @@
       <div class="col">
         <p class="head">project</p>
         <a href="https://github.com/mrgonzales-dev/ibmbob-hackathon">github</a>
-        <a href="#workflow">workflow</a>
         <a href="#demo">demo</a>
       </div>
     </div>
