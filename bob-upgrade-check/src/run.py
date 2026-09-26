@@ -95,7 +95,7 @@ def build_prompt(skill, target):
     )
 
 
-LANES = {"bob-upgrade": "all"}
+LANES = {"bob-upgrade-check": "all"}
 
 
 def main(argv=None):

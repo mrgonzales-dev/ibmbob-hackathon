@@ -12,12 +12,12 @@ const lines = [
   { cls: 'prm', text: '' },
   { cls: 'prm', text: '? which skills? (space to toggle)' },
   { cls: 'chk', text: '  [x] bob-pr        plan review gate' },
-  { cls: 'chk', text: '  [x] bob-upgrade   dependency upgrades' },
+  { cls: 'chk', text: '  [x] bob-upgrade-check   dependency upgrades' },
   { cls: 'opt', text: '  [ ] bob-test      test generation' },
   { cls: 'prm', text: '' },
   { cls: 'res', text: 'installing 2 skills → ~/.bob/skills/' },
   { cls: 'okl', text: '✓ bob-pr       installed' },
-  { cls: 'okl', text: '✓ bob-upgrade  installed' },
+  { cls: 'okl', text: '✓ bob-upgrade-check  installed' },
   { cls: 'okl', text: '✓ done — restart your agent' },
 ]
 </script>

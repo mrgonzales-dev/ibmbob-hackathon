@@ -281,7 +281,7 @@ class TestRuleData(unittest.TestCase):
         import re
 
         full = (
-            ROOT / "bob-upgrade/src/laravel-12-breaking-changes.md"
+            ROOT / "bob-upgrade-check/src/laravel-12-breaking-changes.md"
         ).read_text(encoding="utf-8")
         implemented = {rule["id"] for rule in rules_for_lane("all")}
         for rule_id in sorted(set(re.findall(r"\b(?:DEP|API|DB|CFG)-\d\d\b", full))):
@@ -295,7 +295,7 @@ class TestRuleData(unittest.TestCase):
 
     def test_the_declared_gaps_are_not_also_reported(self):
         full = (
-            ROOT / "bob-upgrade/src/laravel-12-breaking-changes.md"
+            ROOT / "bob-upgrade-check/src/laravel-12-breaking-changes.md"
         ).read_text(encoding="utf-8")
         gap_section = full.split("## Rules the scanner cannot decide alone")[-1]
         implemented = {rule["id"] for rule in rules_for_lane("all")}

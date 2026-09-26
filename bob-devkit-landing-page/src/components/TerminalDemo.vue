@@ -23,12 +23,12 @@ const sessions = [
     ],
   },
   {
-    name: 'bob-upgrade',
+    name: 'bob-upgrade-check',
     tag: 'wip — simulated',
     state: 'idle — task done',
     lines: [
-      { cls: 'usr', text: '› /bob-upgrade upgrade our dependencies' },
-      { cls: 'thk', text: '⠿ skill bob-upgrade loaded — scanning...' },
+      { cls: 'usr', text: '› /bob-upgrade-check upgrade our dependencies' },
+      { cls: 'thk', text: '⠿ skill bob-upgrade-check loaded — scanning...' },
       { cls: 'tol', text: '◆ bob_upgrade scan' },
       { cls: 'res', text: '  → vue 3.4→3.5 safe' },
       { cls: 'res', text: '  → vite 5.x→8.x breaking' },

@@ -8,7 +8,7 @@
       <div class="col">
         <p class="head">skills</p>
         <a href="#skills">bob-pr</a>
-        <a href="#skills">bob-upgrade</a>
+        <a href="#skills">bob-upgrade-check</a>
         <a href="#skills">bob-test</a>
       </div>
       <div class="col">

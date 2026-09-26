@@ -32,7 +32,7 @@ it from its description.
 
 | Command | Purpose |
 |---|---|
-| `bob-upgrade` | Ranked upgrade risk report. Runs every lane and merges them. |
+| `bob-upgrade-check` | Ranked upgrade risk report. Runs every lane and merges them. |
 
 One command covers the whole workflow. The lanes are internal steps, not
 separate commands. The `deps`, `apis`, and `config` lanes read different parts
@@ -50,7 +50,7 @@ Each skill is self-contained. A skill folder holds everything that skill needs,
 so one skill is one folder:
 
 ```
-bob-upgrade/
+bob-upgrade-check/
   SKILL.md          # required: frontmatter + instructions
   src/
     run.py          # the command: local scan, optional --ai to Bob Shell

@@ -35,7 +35,7 @@ project copy wins over the global copy.
 
 | Skill | Command | What it does |
 |---|---|---|
-| `bob-upgrade` | `bob-upgrade` | Major framework upgrade risk analyzer. Scans a PHP project for the package, code, and config changes a version bump causes. Returns one ranked HIGH/MED/LOW report and an optional phased plan. |
+| `bob-upgrade-check` | `bob-upgrade-check` | Major framework upgrade risk analyzer. Scans a PHP project for the package, code, and config changes a version bump causes. Returns one ranked HIGH/MED/LOW report and an optional phased plan. |
 | `bob-impact` | `bob-impact` | Change impact analyzer. Reads `git diff`, traces the direct callers, database tables, and tests that reference the changed code. Prints one ranked blast-radius report. Add `--regress` to run the affected tests. |
 | `bob-pr` | `bob-pr` | Serves a plan as a GitHub-style pull-request page on localhost. You approve or request changes before any real project file is touched. |
 
@@ -62,7 +62,7 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 
 | Path | Purpose |
 |---|---|
-| `bob-upgrade/` | The upgrade risk analyzer skill. |
+| `bob-upgrade-check/` | The upgrade risk analyzer skill. |
 | `bob-impact/` | The change impact analyzer skill. |
 | `bob-pr/` | The plan-as-PR review gate skill. |
 | `bob-devkit-landing-page/` | Vue 3 + Vite landing page for the demo. |
@@ -82,9 +82,9 @@ npm run dev
 
 ---
 
-## How `bob-upgrade` works
+## How `bob-upgrade-check` works
 
-`bob-upgrade` analyzes one project against one target version. It reads the
+`bob-upgrade-check` analyzes one project against one target version. It reads the
 project. It never changes application code during the analysis.
 
 | Phase | What happens |
@@ -105,7 +105,7 @@ The three lanes keep separate contexts so the main thread stays small.
 | `config` | Configuration auditor | `config/`, the code that reads disks | `composer.lock` |
 
 The only source of breaking-change truth is
-`bob-upgrade/src/laravel-12-breaking-changes.md`. No breaking change is ever
+`bob-upgrade-check/src/laravel-12-breaking-changes.md`. No breaking change is ever
 written from memory. Every row carries the impact rating that Laravel
 publishes and a detect signal a search tool can match.
 
@@ -190,14 +190,14 @@ standard, the commit rules, and the test policy.
 
 **Technical:** The devkit is a set of model-agnostic skills. Each skill
 runs a local Python scanner that needs no API key, then optionally hands
-the skill to Bob Shell with `--ai`. The `bob-upgrade` scanner runs three
+the skill to Bob Shell with `--ai`. The `bob-upgrade-check` scanner runs three
 read-only subagent lanes (deps, apis, config) in parallel, merges and
 ranks the findings against a committed rule table, and prints one
 HIGH/MED/LOW report. The `bob-impact` scanner runs three grep lanes
 (callers, tables, tests) in one pass and prints one blast-radius report.
 The `bob-pr` skill serves a plan as a localhost pull-request page with an
 explicit approve gate before any real file is touched. The whole
-`bob-upgrade` scan takes about 13 ms on an 18-file project. The
+`bob-upgrade-check` scan takes about 13 ms on an 18-file project. The
 devkit proves impact with a real workflow, not just code.
 
 **Layman:** This toolkit helps a developer upgrade a big software project

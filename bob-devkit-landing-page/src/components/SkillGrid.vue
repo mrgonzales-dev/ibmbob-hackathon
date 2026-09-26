@@ -8,7 +8,7 @@ const skills = [
   },
   {
     num: '02',
-    name: 'bob-upgrade',
+    name: 'bob-upgrade-check',
     status: 'wip',
     desc: 'Dependency and stack upgrades handled by the agent, gated by review.',
   },

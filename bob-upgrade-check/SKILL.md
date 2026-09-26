@@ -1,10 +1,10 @@
 ---
-name: bob-upgrade
+name: bob-upgrade-check
 description: >-
   Major framework upgrade risk analyzer. Scans a PHP project for the package,
   code, and config changes that a version bump causes, then returns one ranked
   HIGH/MED/LOW report and an optional phased plan. Use when the user says "bob
-  upgrade", "bob-upgrade", "upgrade laravel", "upgrade to Laravel 12", "bump
+  upgrade", "bob-upgrade-check", "upgrade laravel", "upgrade to Laravel 12", "bump
   laravel", "analyze this upgrade", "upgrade risk", "what breaks in this
   upgrade", "is it safe to upgrade", or "check what breaks when I upgrade", and
   also when the user asks to plan a major version bump for a Composer project.
@@ -17,14 +17,14 @@ never change application code during the analysis.
 
 ## Run the local scanner first
 
-`bob-upgrade` needs no API key and no model. Run it in the project root. Use
+`bob-upgrade-check` needs no API key and no model. Run it in the project root. Use
 its rows as the facts. Never add a row it did not report.
 
 | Command | Result |
 |---|---|
-| `bob-upgrade` | Ranked findings as a text table. |
-| `bob-upgrade --json` | The same rows with the raw evidence. |
-| `bob-upgrade --ai` | Hands this skill to Bob Shell. Needs a key. |
+| `bob-upgrade-check` | Ranked findings as a text table. |
+| `bob-upgrade-check --json` | The same rows with the raw evidence. |
+| `bob-upgrade-check --ai` | Hands this skill to Bob Shell. Needs a key. |
 
 The scanner already runs the three lanes below. Add your own reading only where
 the report points at a file you must judge.
@@ -53,7 +53,7 @@ Run the preflight script. It counts files, packages, and tests. Its output is
 exact. Do not count anything yourself.
 
 ```shell
-python bob-upgrade/src/preflight.py --root . --format json
+python bob-upgrade-check/src/preflight.py --root . --format json
 ```
 
 On Windows, use `py -3` in place of `python` when `python` is not on the PATH.
@@ -133,7 +133,7 @@ it.
 | File | Use |
 |---|---|
 | `src/run.py` | The command. Runs the local scanner, or hands the skill to Bob Shell with `--ai`. |
-| `src/laravel12.py` | The local rule engine. It is the scanner behind `bob-upgrade`. |
+| `src/laravel12.py` | The local rule engine. It is the scanner behind `bob-upgrade-check`. |
 | `src/laravel-12-breaking-changes.md` | The only source of breaking-change truth. |
 | `src/report-template.md` | The exact report layout. |
 | `src/preflight.py` | Counts files, packages, and tests. |
