@@ -75,11 +75,15 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 
 ## Get started
 
-```shell
-# macOS / Linux
-curl -fsSL https://raw.githubusercontent.com/mrgonzales-dev/ibmbob-hackathon/main/bobdevkit/install.sh | sh
+**macOS / Linux**
 
-# Windows PowerShell
+```shell
+curl -fsSL https://raw.githubusercontent.com/mrgonzales-dev/ibmbob-hackathon/main/bobdevkit/install.sh | sh
+```
+
+**Windows (PowerShell)**
+
+```powershell
 irm https://raw.githubusercontent.com/mrgonzales-dev/ibmbob-hackathon/main/bobdevkit/install.ps1 | iex
 ```
 
