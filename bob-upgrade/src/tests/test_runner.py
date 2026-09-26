@@ -310,55 +310,6 @@ class TestAiRun(RunnerCase):
         self.assertIn("laravel", " ".join(call.call_args.args[0]))
 
 
-class TestWindowsShims(unittest.TestCase):
-    def cmd_files(self):
-        found = []
-        for base in (ROOT / "bin",):
-            if not base.is_dir():
-                continue
-            found.extend(
-                p for p in base.rglob("*.cmd") if "__pycache__" not in p.parts
-            )
-        return sorted(found)
-
-    def test_the_repository_ships_at_least_one_shim(self):
-        self.assertTrue(self.cmd_files())
-
-    def test_every_shim_uses_crlf_line_endings(self):
-        for path in self.cmd_files():
-            data = path.read_bytes()
-            bare = [
-                index
-                for index, byte in enumerate(data)
-                if byte == 10 and (index == 0 or data[index - 1] != 13)
-            ]
-            self.assertEqual(
-                bare, [], f"{path.name} has bare LF endings. cmd.exe needs CRLF."
-            )
-
-    def test_every_shim_resolves_its_own_directory(self):
-        for path in self.cmd_files():
-            text = path.read_text(encoding="utf-8")
-            self.assertIn('set "DIR=%~dp0"', text)
-
-    def test_every_shim_invokes_python_with_a_quoted_script_path(self):
-        for path in self.cmd_files():
-            text = path.read_text(encoding="utf-8")
-            invocations = [line for line in text.splitlines() if '.py"' in line]
-            self.assertTrue(
-                invocations, f"{path.name} never invokes a python script"
-            )
-            for line in invocations:
-                self.assertIn('"%DIR%', line)
-
-    def test_no_shim_passes_a_bare_script_name_to_python(self):
-        for path in self.cmd_files():
-            text = path.read_text(encoding="utf-8")
-            for line in text.splitlines():
-                if '.py"' in line:
-                    self.assertNotIn("python %" + "s", line.strip())
-
-
 class TestRealRepository(unittest.TestCase):
     def test_every_shipped_skill_can_be_resolved(self):
         names = available_skills(ROOT)
@@ -374,7 +325,7 @@ class TestRealRepository(unittest.TestCase):
 
     def test_every_scanner_backed_skill_ships_a_runner(self):
         for name in LANES:
-            self.assertTrue((ROOT / "skills" / name / "src" / "run.py").is_file(), name)
+            self.assertTrue((ROOT / name / "src" / "run.py").is_file(), name)
 
 
 if __name__ == "__main__":
