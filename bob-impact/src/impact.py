@@ -6,6 +6,7 @@ changed code. Never guesses business rules or indirect callers.
 """
 
 import re
+import shutil
 import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
@@ -331,15 +332,17 @@ def run_regress(root, report):
         ["vendor/bin/phpunit"],
     ]
     for cmd in candidates:
-        executable = cmd[0] if "/" not in cmd[0] else str(root / cmd[0])
-        import shutil
         if "/" in cmd[0]:
-            if not (root / cmd[0]).is_file():
+            executable = str(root / cmd[0])
+            if not Path(executable).is_file():
                 continue
-        elif shutil.which(cmd[0]) is None:
-            continue
+        else:
+            executable = shutil.which(cmd[0])
+            if executable is None:
+                continue
+        run_cmd = [executable] + cmd[1:]
         print(f"$ {' '.join(cmd)}")
-        result = subprocess.run(cmd, cwd=str(root))
+        result = subprocess.run(run_cmd, cwd=str(root))
         print(f"\nExit code: {result.returncode}")
         return result.returncode
     print("No test runner found. Tried: php artisan test, vendor/bin/phpunit.")
