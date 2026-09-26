@@ -17,7 +17,7 @@ Run from the project root. `SKILL_DIR` is this skill's directory.
 python3 SKILL_DIR/src/bob_pr.py new --title "..." --summary "..." --files f1.py,f2.py
 python3 SKILL_DIR/src/bob_pr.py snapshot <id>    # copy planned files to .bob-pr/tmp/<id>/ (keeps edited copies, warns)
 python3 SKILL_DIR/src/bob_pr.py diff <id>        # compute real diffs after you edit the copies
-python3 SKILL_DIR/src/bob_pr.py serve            # detached background server, prints the URL (returns immediately)
+python3 SKILL_DIR/src/bob_pr.py serve            # detached background server on :2428, prints the URL (returns immediately)
 python3 SKILL_DIR/src/bob_pr.py stop             # stop the background review server
 python3 SKILL_DIR/src/bob_pr.py decision <id>    # APPROVED | CHANGES_REQUESTED | PENDING | UNKNOWN + comments
 python3 SKILL_DIR/src/bob_pr.py revise <id> --summary "..." --files f1.py  # --files optional: inherits previous revision's list
@@ -34,7 +34,7 @@ python3 SKILL_DIR/src/bob_pr.py list             # all PRs and statuses
 3. Run `snapshot` — it copies each planned file into `.bob-pr/tmp/<id>/` and fingerprints the originals.
 4. Make the planned edits **on the shadow copies** under `.bob-pr/tmp/<id>/`, exactly as you would on real files.
 5. Run `diff` — real unified diffs are computed and attached to the revision. The page always diffs live shadow copies, so later edits show without re-running it.
-6. Run `serve` — it detaches a background server and returns immediately with the URL. Tell the user to open it in the IDE's built-in Simple Browser or a normal browser. Run `stop` when review is done.
+6. Run `serve` — it kills any other bob-pr server first (including orphans with no state files), binds strictly on :2428, detaches a background server, and returns immediately with the URL. Tell the user to open it in the IDE's built-in Simple Browser or a normal browser. Run `stop` when review is done.
 7. End the turn. Wait for the user to say they reviewed it — do not poll.
 8. Run `decision <id>` and act on the verdict:
    - `APPROVED` — run `apply <id>` to install the shadow copies onto the real files, then finish any work the plan did not cover.
@@ -45,6 +45,8 @@ python3 SKILL_DIR/src/bob_pr.py list             # all PRs and statuses
 ## Rules
 
 - Never edit real project files before `decision` returns `APPROVED` and `apply` runs. Edit only `.bob-pr/tmp/<id>/` copies.
+- There is exactly one review server: `serve` kills every other running `bob_pr.py ... serve` process, then binds :2428 strictly. If `serve` reports the port in use, a non-bob-pr process owns it — free the port, never move bob-pr to another port.
+- Always point the user at `http://localhost:2428/` — serve never silently picks another port.
 - The page disables the decision buttons until diffs exist. If the user says the buttons are greyed out, run `snapshot` then `diff`.
 - Always pass `--files` to `new`. For `revise`, `--files` is optional — the previous revision's list is inherited.
 - Once approved, a PR is locked — further clicks are ignored and the buttons disappear. `APPROVED` only ends when you run `apply` (status `applied`) or `close`.

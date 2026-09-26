@@ -71,6 +71,82 @@ def _remove_state_files(state_dir):
             pass
 
 
+def _other_server_pids():
+    """Yield pids of running `bob_pr.py serve` processes, except self.
+
+    Reads /proc/<pid>/cmdline as real argv, not a text match — a shell
+    quoting the string (bash -c '...bob_pr.py serve...') never matches.
+    The parent pid is excluded too: the detached child's own spawner runs
+    `bob_pr.py serve` and must not take the SIGTERM. Silently yields
+    nothing on systems without /proc.
+    """
+    protected = {os.getpid(), os.getppid()}
+    try:
+        entries = os.listdir("/proc")
+    except OSError:
+        return
+    for name in entries:
+        if not name.isdigit() or int(name) in protected:
+            continue
+        try:
+            with open(f"/proc/{name}/cmdline", "rb") as handle:
+                argv = handle.read().split(b"\0")
+        except OSError:
+            continue
+        is_script = any(
+            arg == b"bob_pr.py" or arg.endswith(b"/bob_pr.py")
+            for arg in argv
+        )
+        if is_script and b"serve" in argv:
+            yield int(name)
+
+
+def _wait_for_death(pids, timeout=2.0):
+    """Block until each pid exits or zombies. Best-effort, bounded.
+
+    Reads /proc/<pid>/stat for the state field — 'Z' counts as dead.
+    """
+    deadline = time.time() + timeout
+    for pid in pids:
+        while time.time() < deadline:
+            try:
+                with open(f"/proc/{pid}/stat", "rb") as handle:
+                    state = handle.read().rsplit(b")", 1)[1].split()[0]
+                if state == b"Z":
+                    break
+            except OSError:
+                break
+            time.sleep(0.05)
+
+
+def _kill_other_servers():
+    """SIGTERM every running bob-pr server except this process.
+
+    Uses _other_server_pids, so orphan servers with no pid file are
+    caught too. Waits for the kills to land so a follow-up pid check
+    never sees a dying server as alive. Silent when no server runs.
+    """
+    pids = list(_other_server_pids())
+    for pid in pids:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass
+    _wait_for_death(pids)
+
+
+def _pid_is_bob_pr(pid):
+    """True when the pid's command line mentions bob_pr.py (/proc check).
+
+    Unreadable processes are trusted — the pid file is ours to honor.
+    """
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as handle:
+            return b"bob_pr.py" in handle.read()
+    except OSError:
+        return True
+
+
 def _serve_foreground(args, project_root, database_path):
     """Run the review server in the foreground (the child process mode).
 
@@ -79,11 +155,19 @@ def _serve_foreground(args, project_root, database_path):
     blocks until interrupted or killed.
     """
     state_dir = os.path.dirname(database_path) or "."
-    server = make_server(database_path, args.port, project_root)
-    with open(os.path.join(state_dir, "serve.port"), "w") as handle:
-        handle.write(str(server.server_address[1]))
+    try:
+        server = make_server(database_path, args.port, project_root)
+    except OSError:
+        print(
+            f"error: port {args.port} is in use — bob-pr refuses to "
+            "serve on another port",
+            file=sys.stderr,
+        )
+        sys.exit(1)
     with open(os.path.join(state_dir, "serve.pid"), "w") as handle:
         handle.write(str(os.getpid()))
+    with open(os.path.join(state_dir, "serve.port"), "w") as handle:
+        handle.write(str(server.server_address[1]))
     print(f"Serving on http://localhost:{server.server_address[1]}/")
     try:
         server.serve_forever()
@@ -94,6 +178,33 @@ def _serve_foreground(args, project_root, database_path):
         _remove_state_files(state_dir)
 
 
+def _running_server(state_dir):
+    """Return (pid, port) of a live background server, else None.
+
+    Reads serve.pid and serve.port; a dead pid means stale files from a
+    crashed run — they get cleaned and None is returned.
+    """
+    try:
+        with open(os.path.join(state_dir, "serve.pid")) as handle:
+            pid = int(handle.read().strip())
+    except (OSError, ValueError):
+        return None
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        _remove_state_files(state_dir)
+        return None
+    if not _pid_is_bob_pr(pid):
+        _remove_state_files(state_dir)
+        return None
+    try:
+        with open(os.path.join(state_dir, "serve.port")) as handle:
+            port = int(handle.read().strip())
+    except (OSError, ValueError):
+        port = None
+    return pid, port
+
+
 def _spawn_server(args, project_root, database_path):
     """Spawn the review server as a detached child and return at once.
 
@@ -101,8 +212,15 @@ def _spawn_server(args, project_root, database_path):
     database when its socket is bound. The parent polls that file for up
     to 5 seconds, then prints the URL so the caller knows where to point
     the reviewer. Child output goes to serve.log in the same directory.
+    A live server for the same database is reported, never duplicated.
     """
     state_dir = os.path.dirname(database_path) or "."
+    running = _running_server(state_dir)
+    if running:
+        pid, port = running
+        url = f"http://localhost:{port}/" if port else "(port unknown)"
+        print(f"Already serving on {url} (pid {pid})")
+        return
     os.makedirs(state_dir, exist_ok=True)
     script = _bob_pr_script()
     log_path = os.path.join(state_dir, SERVE_LOG_NAME)
@@ -143,6 +261,13 @@ def _spawn_server(args, project_root, database_path):
         print(f"Serving on http://localhost:{port}/ (pid {process.pid})")
     else:
         print(f"Server failed to start (pid {process.pid})")
+        try:
+            with open(log_path, "rb") as handle:
+                tail = handle.read().decode(errors="replace").splitlines()[-5:]
+            for line in tail:
+                print(f"  {line}")
+        except OSError:
+            pass
     print(f"Log: {log_path}")
     print(f"Stop: python3 {script} --db {database_path} stop")
 
@@ -280,6 +405,7 @@ def main(argv=None):
         print(f"Diffs stored for {len(changed)} changed file(s): {changed}")
     elif args.command == "serve":
         database_path = _database_path(args)
+        _kill_other_servers()
         if args.foreground:
             _serve_foreground(args, project_root, database_path)
         else:

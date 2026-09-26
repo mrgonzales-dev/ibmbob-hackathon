@@ -19,14 +19,18 @@ shadow copies at render time while .bob-pr/tmp/<id>/ exists, so edits
 after diff still show. apply refreshes the stored diff before it lands
 files, then deletes the shadow dir — the applied page keeps showing the
 diff that landed.
-serve spawns a detached background child running `serve --foreground` and
-returns immediately, so the agent's turn is never blocked. The child
-writes serve.port and serve.pid next to the database when its socket
-binds; the parent polls serve.port for up to 5 s and prints the real URL
-plus the pid. Child output goes to serve.log. Port 2428 is the default; a
-taken port falls back to an OS-assigned free port. --port <n> sets a
-preference. stop reads serve.pid, sends SIGTERM, and removes the state
-files; with no server recorded it prints a clean message.
+serve first kills every other running `bob_pr.py ... serve` process —
+orphans without state files included — then spawns a detached background
+child running `serve --foreground` and returns immediately, so the
+agent's turn is never blocked. The bind is strict: the server takes its
+port or fails; there is no fallback port. 2428 is the default; --port
+overrides it but a taken port aborts with an error instead of moving.
+The child writes serve.port and serve.pid next to the database when its
+socket binds; the parent polls serve.port for up to 5 s and prints the
+URL plus the pid. Child output goes to serve.log. A pid file whose
+process is dead or is not bob_pr is treated as stale and cleaned.
+stop reads serve.pid, sends SIGTERM, and removes the state files; with
+no server recorded it prints a clean message.
 GET / lists PRs. GET /pr/<id> shows the review page. POST /decision
 records a click. Bad JSON, a missing pr_id, or an unknown kind gets a 400.
 An unknown pr_id gets a 404.

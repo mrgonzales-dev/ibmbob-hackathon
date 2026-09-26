@@ -7,8 +7,10 @@ import io
 import json
 import os
 import socket
+import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import urllib.request
 import threading
@@ -770,17 +772,16 @@ class ServerTests(unittest.TestCase):
         ).fetchone()[0]
         self.assertEqual(count, 0)
 
-    def test_serve_falls_back_when_port_taken(self):
-        """make_server must fall back to an OS-assigned port when the
-        requested port is already bound."""
+    def test_serve_fails_when_port_taken(self):
+        """make_server must raise OSError when the requested port is
+        already bound — bob-pr serves on its port or not at all."""
         blocker = socket.socket()
         blocker.bind(("localhost", 0))
         blocker.listen(1)
         taken_port = blocker.getsockname()[1]
         try:
-            server2 = bob_pr.make_server(self.db_path, port=taken_port)
-            self.assertNotEqual(server2.server_address[1], taken_port)
-            server2.server_close()
+            with self.assertRaises(OSError):
+                bob_pr.make_server(self.db_path, port=taken_port)
         finally:
             blocker.close()
 
@@ -805,6 +806,68 @@ class ServerTests(unittest.TestCase):
         self.assertFalse(
             os.path.exists(os.path.join(state_dir, "serve.pid"))
         )
+
+    def test_serve_replaces_a_running_server(self):
+        """serve on a DB with a live server kills the old one and
+        respawns — one bob-pr server at a time, always."""
+        root = tempfile.mkdtemp()
+        db_path = os.path.join(root, ".bob-pr", "bob_pr.db")
+        bob_pr.init_db(db_path).close()
+        state_dir = os.path.dirname(db_path)
+        pid_path = os.path.join(state_dir, "serve.pid")
+        try:
+            bob_pr.main(["--db", db_path, "serve", "--port", "0"])
+            with open(pid_path) as handle:
+                old_pid = int(handle.read().strip())
+            bob_pr.main(["--db", db_path, "serve", "--port", "0"])
+            with open(pid_path) as handle:
+                new_pid = int(handle.read().strip())
+            self.assertNotEqual(old_pid, new_pid)
+
+            def old_still_serving():
+                try:
+                    with open(f"/proc/{old_pid}/cmdline", "rb") as h:
+                        return b"bob_pr.py" in h.read()
+                except OSError:
+                    return False
+
+            deadline = time.time() + 5
+            while old_still_serving() and time.time() < deadline:
+                time.sleep(0.1)
+            self.assertFalse(old_still_serving())
+        finally:
+            bob_pr.main(["--db", db_path, "stop"])
+
+    def test_serve_kills_other_bob_pr_servers(self):
+        """serve must SIGTERM other running bob-pr servers — including
+        orphans with no pid file — before binding."""
+        root = tempfile.mkdtemp()
+        db_path = os.path.join(root, ".bob-pr", "bob_pr.db")
+        bob_pr.init_db(db_path).close()
+        script = os.path.join(
+            os.path.dirname(os.path.abspath(bob_pr.__file__)), "bob_pr.py"
+        )
+        orphan = subprocess.Popen(
+            [
+                sys.executable, script,
+                "--db", db_path, "serve", "--foreground", "--port", "0",
+            ],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        time.sleep(0.5)
+        try:
+            bob_pr.main(["--db", db_path, "serve", "--port", "0"])
+            deadline = time.time() + 5
+            while orphan.poll() is None and time.time() < deadline:
+                time.sleep(0.1)
+            self.assertIsNotNone(orphan.poll())
+        finally:
+            orphan.kill()
+            orphan.wait()
+            bob_pr.main(["--db", db_path, "stop"])
 
     def test_stop_without_server_is_clean(self):
         """stop with no pid file must report cleanly, not crash."""

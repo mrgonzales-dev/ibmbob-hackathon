@@ -19,10 +19,9 @@ DEFAULT_PORT = 2428
 def make_server(database_path, port=DEFAULT_PORT, project_root=None):
     """Create (but do not start) the HTTP server for the review pages.
 
-    When the requested port is taken, falls back to an OS-assigned free
-    port — the caller reads the real port from server.server_address.
-    project_root lets the pages diff live shadow copies; without it they
-    render the stored diffs.
+    The bind is strict: a taken port raises OSError — bob-pr serves on
+    its own port (2428 by default) or not at all. project_root lets the
+    pages diff live shadow copies; without it they render stored diffs.
     """
 
     class Handler(BaseHTTPRequestHandler):
@@ -109,10 +108,7 @@ def make_server(database_path, port=DEFAULT_PORT, project_root=None):
         def log_message(self, *args):
             """Silence the default per-request log line."""
 
-    try:
-        server = ThreadingHTTPServer(("localhost", port), Handler)
-    except OSError:
-        server = ThreadingHTTPServer(("localhost", 0), Handler)
+    server = ThreadingHTTPServer(("localhost", port), Handler)
     server.database_path = database_path
     server.project_root = project_root
     return server
