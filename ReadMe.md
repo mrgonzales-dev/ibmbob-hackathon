@@ -70,7 +70,57 @@ no model. Add `--ai` to hand the skill to Bob Shell, which needs a key.
 
 ---
 
-## Quick start
+## Get started
+
+### Option A — Clone the full repo
+
+```shell
+git clone https://github.com/mrgonzales-dev/ibmbob-hackathon.git
+cd ibmbob-hackathon
+```
+
+All three skills are already under the repo root. Copy the ones you need to
+`~/.bob/skills/` so Bob finds them in every project:
+
+```shell
+# macOS / Linux
+cp -r bob-upgrade-check ~/.bob/skills/
+cp -r bob-impact        ~/.bob/skills/
+cp -r bob-pr            ~/.bob/skills/
+
+# Windows PowerShell
+Copy-Item -Recurse bob-upgrade-check $HOME\.bob\skills\
+Copy-Item -Recurse bob-impact        $HOME\.bob\skills\
+Copy-Item -Recurse bob-pr            $HOME\.bob\skills\
+```
+
+### Option B — Download one skill without cloning
+
+Use `npx degit` to pull a single skill folder straight into your project's
+`.bob/skills/` directory. No `git clone` needed.
+
+```shell
+# upgrade risk analyzer
+npx degit mrgonzales-dev/ibmbob-hackathon/bob-upgrade-check .bob/skills/bob-upgrade-check
+
+# change impact analyzer
+npx degit mrgonzales-dev/ibmbob-hackathon/bob-impact .bob/skills/bob-impact
+
+# plan-as-PR review gate
+npx degit mrgonzales-dev/ibmbob-hackathon/bob-pr .bob/skills/bob-pr
+```
+
+`npx degit` requires Node.js 16 or later. It downloads the folder contents
+without the full Git history.
+
+### Option C — Activate all skills from any AI agent chat
+
+Paste the prompt below into any AI coding agent (Bob Shell, Claude Code,
+Cursor, Devin, etc.). The agent runs all three `npx degit` commands, reads
+each downloaded `SKILL.md`, and immediately follows its instructions. No
+manual copy step needed.
+
+> Run `npx degit mrgonzales-dev/ibmbob-hackathon/bob-upgrade-check .bob/skills/bob-upgrade-check` then `npx degit mrgonzales-dev/ibmbob-hackathon/bob-impact .bob/skills/bob-impact` then `npx degit mrgonzales-dev/ibmbob-hackathon/bob-pr .bob/skills/bob-pr` and follow the generated skill instructions for all three now. Read the complete output of each, redirecting to a temporary file first if necessary. Resolve relative paths from the supporting-files directory each skill provides.
 
 ### Run the landing page
 
