@@ -2,10 +2,10 @@
 const lines = [
   { cls: 'usr', text: '$ bobdevkit install' },
   { cls: 'res', text: 'detecting agent environments...' },
-  { cls: 'res', text: '  found: ibm-bob-2.0, windsurf, cursor' },
+  { cls: 'res', text: '  found: bob-devkit, windsurf, cursor' },
   { cls: 'prm', text: '' },
   { cls: 'prm', text: '? which agent do you use?' },
-  { cls: 'sel', text: '  ❯ IBM Bob 2.0' },
+  { cls: 'sel', text: '  ❯ BOB devkit' },
   { cls: 'opt', text: '    Windsurf' },
   { cls: 'opt', text: '    Cursor' },
   { cls: 'opt', text: '    Devin' },
@@ -13,11 +13,12 @@ const lines = [
   { cls: 'prm', text: '? which skills? (space to toggle)' },
   { cls: 'chk', text: '  [x] bob-pr        plan review gate' },
   { cls: 'chk', text: '  [x] bob-upgrade-check   dependency upgrades' },
-  { cls: 'opt', text: '  [ ] bob-test      test generation' },
+  { cls: 'chk', text: '  [x] bob-impact    change impact' },
   { cls: 'prm', text: '' },
-  { cls: 'res', text: 'installing 2 skills → ~/.bob/skills/' },
+  { cls: 'res', text: 'installing 3 skills → ~/.bob/skills/' },
   { cls: 'okl', text: '✓ bob-pr       installed' },
   { cls: 'okl', text: '✓ bob-upgrade-check  installed' },
+  { cls: 'okl', text: '✓ bob-impact   installed' },
   { cls: 'okl', text: '✓ done — restart your agent' },
 ]
 </script>

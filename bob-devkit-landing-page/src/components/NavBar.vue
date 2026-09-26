@@ -1,6 +1,6 @@
 <template>
   <header class="nav">
-    <a class="logo" href="#top">BOB<span>DEVKIT</span></a>
+    <a class="logo" href="#top">Bob<span>devkit</span></a>
     <nav class="links">
       <a href="#demo">demo</a>
       <a href="#install">install</a>
@@ -27,10 +27,9 @@
 .logo {
   font-weight: 700;
   font-size: 18px;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   color: var(--ink);
   text-decoration: none;
-  text-transform: uppercase;
 }
 
 .logo span {

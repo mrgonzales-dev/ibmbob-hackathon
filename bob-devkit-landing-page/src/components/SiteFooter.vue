@@ -2,14 +2,14 @@
   <footer class="foot">
     <div class="cols">
       <div class="col brand">
-        <p class="logo">BOB<span>DEVKIT</span></p>
+        <p class="logo">Bob<span>devkit</span></p>
         <p class="tag">Agentic skillset for developer workflows.</p>
       </div>
       <div class="col">
         <p class="head">skills</p>
         <a href="#skills">bob-pr</a>
         <a href="#skills">bob-upgrade-check</a>
-        <a href="#skills">bob-test</a>
+        <a href="#skills">bob-impact</a>
       </div>
       <div class="col">
         <p class="head">project</p>
@@ -18,7 +18,7 @@
         <a href="#demo">demo</a>
       </div>
     </div>
-    <p class="base">built for IBM Bob 2.0 — hackathon prototype</p>
+    <p class="base">built for BOB devkit — hackathon prototype</p>
   </footer>
 </template>
 
@@ -40,9 +40,8 @@
 .logo {
   font-weight: 700;
   font-size: 18px;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   margin: 0 0 8px;
-  text-transform: uppercase;
 }
 
 .logo span {

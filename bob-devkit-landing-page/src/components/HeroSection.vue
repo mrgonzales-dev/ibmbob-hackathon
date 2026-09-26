@@ -4,13 +4,11 @@ import TerminalDemo from './TerminalDemo.vue'
 
 <template>
   <section class="hero" id="top">
-    <p class="sys reveal">sys://skills.collection</p>
     <h1 class="reveal">
-      Supercharge<br />
-      <span class="grad">IBM Bob 2.0</span>
+      <span class="grad">BOB devkit</span>
     </h1>
     <p class="sub reveal">
-      A skill kit for the IBM Bob 2.0 IDE — agent work, human gated.
+      A skill kit for the BOB devkit IDE — agent work, human gated.
     </p>
     <div class="cta-row reveal">
       <a class="btn primary" href="#skills">browse the skills</a>

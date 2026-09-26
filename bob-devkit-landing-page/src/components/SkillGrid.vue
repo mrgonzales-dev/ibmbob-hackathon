@@ -9,14 +9,14 @@ const skills = [
   {
     num: '02',
     name: 'bob-upgrade-check',
-    status: 'wip',
+    status: 'live',
     desc: 'Dependency and stack upgrades handled by the agent, gated by review.',
   },
   {
     num: '03',
-    name: 'bob-test',
-    status: 'soon',
-    desc: 'Test generation and verification loops. Slot reserved.',
+    name: 'bob-impact',
+    status: 'live',
+    desc: 'Blast radius before you merge. Traces callers, tables, and tests from git diff.',
   },
 ]
 </script>
